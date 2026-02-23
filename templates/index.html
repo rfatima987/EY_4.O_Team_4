@@ -1,10 +1,12 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>FixNear - Home</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
+        {% include 'header.html' %}
 
     <h1>FixNear</h1>
     <p>Find Local Service Helpers Easily</p>
@@ -14,6 +16,6 @@
         <a href="{% url 'providers' %}">View Service Providers</a>
         <a href="/admin/">Admin Login</a>
     </div>
-
+    {% include 'footer.html' %}
 </body>
 </html>
