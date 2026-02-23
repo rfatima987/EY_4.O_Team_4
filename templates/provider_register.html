@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Service Provider</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <h2>Register as Service Provider</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="Enter Name" required><br>
+        <input type="text" name="profession" placeholder="Profession (Plumber, Electrician...)" required><br>
+        <input type="text" name="phone" placeholder="Phone Number" required><br>
+        <input type="text" name="location" placeholder="Location / Area" required><br>
+        <button type="submit">Register</button>
+    </form>
+
+    <br>
+    <a href="{% url 'home' %}">Back to Home</a>
+
+</body>
+</html>
