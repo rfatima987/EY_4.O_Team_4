@@ -1,0 +1,26 @@
+<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="avatar3-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <circle cx="75" cy="75" r="75" fill="url(#avatar3-gradient)"/>
+  <!-- Head -->
+  <circle cx="75" cy="50" r="20" fill="#FDBF5D"/>
+  <!-- Hair (longer) -->
+  <path d="M 55 45 Q 75 30 95 45 L 95 50 Q 75 65 55 50 Z" fill="#8B4513"/>
+  <path d="M 55 50 Q 60 48 65 50 L 65 65 Q 55 60 55 50 Z" fill="#8B4513"/>
+  <path d="M 95 50 Q 90 48 85 50 L 85 65 Q 95 60 95 50 Z" fill="#8B4513"/>
+  <!-- Eyes -->
+  <circle cx="68" cy="47" r="2" fill="#8B4513"/>
+  <circle cx="82" cy="47" r="2" fill="#8B4513"/>
+  <!-- Nose -->
+  <line x1="75" y1="48" x2="75" y2="54" stroke="#8B4513" stroke-width="1"/>
+  <!-- Smile -->
+  <path d="M 68 56 Q 75 59 82 56" fill="none" stroke="#8B4513" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Neck and Shoulders -->
+  <rect x="65" y="65" width="20" height="15" fill="#FDBF5D"/>
+  <ellipse cx="75" cy="80" rx="35" ry="18" fill="#F97316"/>
+</svg>

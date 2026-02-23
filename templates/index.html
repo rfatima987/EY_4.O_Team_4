@@ -1,36 +1,249 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>FixNear - Home</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FixNear - Find trusted local service providers near you. Electricians, plumbers, cleaners, mechanics, and more.">
+    <title>FixNear - Find Trusted Local Service Providers Near You</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    {% include 'header.html' %}
+    {% include 'header_new.html' %}
 
+    <!-- ========== HERO SECTION ========== -->
     <section class="hero">
-        <div class="hero-container">
-            <h1>FixNear</h1>
-            <p>Find Local Service Helpers Easily</p>
+        <div class="hero-content">
+            <h1>Find Trusted Local Service Providers Near You</h1>
+            <p class="hero-subtitle">
+                Electricians, plumbers, cleaners, mechanics, and more — all in one place. 
+                Quality services from verified professionals, instantly accessible.
+            </p>
 
-            <div class="hero-buttons">
-                <a href="{% url 'add_provider' %}" class="btn primary">
-                    Register as Service Provider
-                </a>
+            <form class="hero-search" method="GET" action="{% url 'providers' %}">
+                <input 
+                    type="text" 
+                    class="hero-search-input" 
+                    name="service"
+                    placeholder="What service do you need?"
+                >
+                <input 
+                    type="text" 
+                    class="hero-search-input" 
+                    name="location"
+                    placeholder="Location or zip code"
+                >
+                <button type="submit" class="cta-btn cta-btn-primary" style="border: none; cursor: pointer; margin-left: 10px;">
+                    Find Now
+                </button>
+            </form>
 
-                <a href="{% url 'providers' %}" class="btn secondary">
-                    View Service Providers
-                </a>
-
-                <a href="/admin/" class="btn outline">
-                    Admin Login
+            <div class="hero-cta">
+                <a href="{% url 'add_provider' %}" class="cta-btn cta-btn-outline">
+                    Become a Provider
                 </a>
             </div>
         </div>
     </section>
 
-    {% include 'footer.html' %}
+    <!-- ========== SERVICES SECTION ========== -->
+    <section class="services-section">
+        <div class="section-header">
+            <h2>Popular Services</h2>
+            <p>Browse from our wide range of trusted services and find exactly what you need</p>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/electrician.svg' %}" alt="Electrical Services" /></div>
+                <h3>Electrical</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/plumber.svg' %}" alt="Plumbing Services" /></div>
+                <h3>Plumbing</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/cleaner.svg' %}" alt="Cleaning Services" /></div>
+                <h3>Cleaning</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/ac-repair.svg' %}" alt="AC Repair" /></div>
+                <h3>AC Repair</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/mechanic.svg' %}" alt="Car Repair" /></div>
+                <h3>Car Repair</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/carpenter.svg' %}" alt="Carpentry Services" /></div>
+                <h3>Carpentry</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/painter.svg' %}" alt="Painting Services" /></div>
+                <h3>Painting</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/general-services.svg' %}" alt="General Services" /></div>
+                <h3>General Services</h3>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><img src="{% static 'images/electrician.svg' %}" alt="More Services" /></div>
+                <h3>More Services</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== HOW IT WORKS SECTION ========== -->
+    <section class="how-it-works">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Get quality services in just 3 simple steps</p>
+        </div>
+
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Search Service</h3>
+                <p>Tell us what service you need and where you're located. Browse through verified providers in your area.</p>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Choose Provider</h3>
+                <p>Compare providers by ratings, reviews, and prices. Read detailed profiles and customer feedback to decide.</p>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Book & Get Service</h3>
+                <p>Book your service instantly. Get updates, communicate with provider, and pay securely through our platform.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEATURED PROVIDERS SECTION ========== -->
+    <section class="providers-section">
+        <div class="section-header">
+            <h2>Featured Service Providers</h2>
+            <p>Meet our top-rated service providers trusted by thousands of customers</p>
+        </div>
+
+        <div class="providers-grid">
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar1.svg' %}" alt="Raj Kumar" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Raj Kumar</div>
+                    <div class="provider-service">Electrician</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★★</span>
+                        <span>(287 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar2.svg' %}" alt="Mohit Singh" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Mohit Singh</div>
+                    <div class="provider-service">Plumber</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★☆</span>
+                        <span>(145 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar3.svg' %}" alt="Priya Sharma" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Priya Sharma</div>
+                    <div class="provider-service">Cleaning Services</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★★</span>
+                        <span>(512 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar1.svg' %}" alt="Arun Patel" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Arun Patel</div>
+                    <div class="provider-service">AC Specialist</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★★</span>
+                        <span>(198 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar2.svg' %}" alt="Vikram Auto" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Vikram Auto</div>
+                    <div class="provider-service">Car Mechanic</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★☆</span>
+                        <span>(356 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+
+            <div class="provider-card">
+                <div class="provider-image"><img src="{% static 'images/avatar3.svg' %}" alt="Home Pros" /></div>
+                <div class="provider-info">
+                    <div class="provider-name">Home Pros</div>
+                    <div class="provider-service">General Repairs</div>
+                    <div class="provider-rating">
+                        <span class="stars">★★★★★</span>
+                        <span>(623 reviews)</span>
+                    </div>
+                    <button class="provider-btn">View Profile</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="{% url 'providers' %}" class="cta-btn cta-btn-primary">
+                View All Providers
+            </a>
+        </div>
+    </section>
+
+    {% include 'footer_new.html' %}
+
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.menu-toggle')?.addEventListener('click', function() {
+            const nav = document.querySelector('.main-nav');
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+            nav.classList.toggle('active');
+        });
+
+        // Close menu when link is clicked
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.menu-toggle').setAttribute('aria-expanded', 'false');
+                document.querySelector('.main-nav').classList.remove('active');
+            });
+        });
+    </script>
 
 </body>
 </html>

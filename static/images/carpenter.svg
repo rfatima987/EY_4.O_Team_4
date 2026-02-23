@@ -1,0 +1,25 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="carpenter-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EA580C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C2410C;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="95" fill="url(#carpenter-gradient)" opacity="0.1"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#carpenter-gradient)" stroke-width="2"/>
+  <!-- Hammer -->
+  <g transform="translate(70, 75)">
+    <rect x="0" y="0" width="50" height="8" rx="4" fill="#8B4513" stroke="#EA580C" stroke-width="1.5"/>
+    <rect x="42" y="-10" width="10" height="28" rx="2" fill="#696969" stroke="#EA580C" stroke-width="1.5"/>
+    <!-- Hammer head -->
+    <path d="M 40 -8 L 55 -8 L 55 8 L 40 8 Q 38 0 40 0 Z" fill="#696969" stroke="#EA580C" stroke-width="1.5"/>
+  </g>
+  <!-- Saw -->
+  <g transform="translate(65, 120)">
+    <rect x="0" y="0" width="45" height="6" rx="3" fill="#8B4513" stroke="#EA580C" stroke-width="1.5"/>
+    <!-- Saw teeth -->
+    <path d="M 5 6 L 8 12 L 11 6 L 14 12 L 17 6 L 20 12 L 23 6 L 26 12 L 29 6 L 32 12 L 35 6 L 38 12 L 41 6" fill="none" stroke="#696969" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  <!-- Wood board -->
+  <rect x="50" y="150" width="100" height="8" rx="2" fill="#8B4513" stroke="#EA580C" stroke-width="1.5" transform="rotate(-15 100 154)"/>
+</svg>

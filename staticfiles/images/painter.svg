@@ -1,0 +1,29 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="painter-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9333EA;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="95" fill="url(#painter-gradient)" opacity="0.1"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#painter-gradient)" stroke-width="2"/>
+  <!-- Paint bucket -->
+  <path d="M 70 70 L 65 110 Q 65 120 75 120 L 125 120 Q 135 120 135 110 L 130 70 Z" fill="#E0E7FF" stroke="#A855F7" stroke-width="2"/>
+  <!-- Paint inside bucket -->
+  <path d="M 72 80 L 68 110 Q 68 118 75 118 L 125 118 Q 132 118 132 110 L 128 80 Z" fill="#F97316"/>
+  <!-- Bucket handle -->
+  <path d="M 80 65 Q 100 50 120 65" fill="none" stroke="#A855F7" stroke-width="3" stroke-linecap="round"/>
+  <!-- Paintbrush -->
+  <g transform="translate(75, 130)">
+    <!-- Handle -->
+    <rect x="-3" y="0" width="6" height="35" rx="3" fill="#8B4513" stroke="#A855F7" stroke-width="1.5"/>
+    <!-- Bristles -->
+    <ellipse cx="0" cy="38" rx="8" ry="5" fill="#DDD" stroke="#A855F7" stroke-width="1"/>
+    <path d="M -4 36 Q -6 40 -4 42" stroke="#DDD" stroke-width="1"/>
+    <path d="M 0 35 Q 0 40 0 42" stroke="#DDD" stroke-width="1"/>
+    <path d="M 4 36 Q 6 40 4 42" stroke="#DDD" stroke-width="1"/>
+  </g>
+  <!-- Paint drop on brush -->
+  <circle cx="75" cy="125" r="3" fill="#F97316"/>
+  <circle cx="78" cy="128" r="2" fill="#FB923C" opacity="0.7"/>
+</svg>
