@@ -6,16 +6,31 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
-        {% include 'header.html' %}
 
-    <h1>FixNear</h1>
-    <p>Find Local Service Helpers Easily</p>
+    {% include 'header.html' %}
 
-    <div class="menu">
-        <a href="{% url 'add_provider' %}">Register as Service Provider</a>
-        <a href="{% url 'providers' %}">View Service Providers</a>
-        <a href="/admin/">Admin Login</a>
-    </div>
+    <section class="hero">
+        <div class="hero-container">
+            <h1>FixNear</h1>
+            <p>Find Local Service Helpers Easily</p>
+
+            <div class="hero-buttons">
+                <a href="{% url 'add_provider' %}" class="btn primary">
+                    Register as Service Provider
+                </a>
+
+                <a href="{% url 'providers' %}" class="btn secondary">
+                    View Service Providers
+                </a>
+
+                <a href="/admin/" class="btn outline">
+                    Admin Login
+                </a>
+            </div>
+        </div>
+    </section>
+
     {% include 'footer.html' %}
+
 </body>
 </html>
