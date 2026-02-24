@@ -36,12 +36,12 @@
                         <a href="{% url 'home' %}" class="dropdown-link">My Profile</a>
                         <a href="{% url 'home' %}" class="dropdown-link">Dashboard</a>
                         <a href="{% url 'home' %}" class="dropdown-link">Settings</a>
-                        <a href="{% url 'home' %}" class="dropdown-link">Logout</a>
+                        <a href="{% url 'logout' %}" class="dropdown-link">Logout</a>
                     </div>
                 </div>
             {% else %}
-                <a href="{% url 'home' %}" class="btn btn-primary">Login</a>
-                <a href="{% url 'add_provider' %}" class="btn btn-outline">Sign Up</a>
+                <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+                <a href="{% url 'signup' %}" class="btn btn-outline">Sign Up</a>
             {% endif %}
         </div>
 
