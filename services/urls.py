@@ -17,19 +17,54 @@ Including another URLconf
 from django.urls import path
 from . import views
 
-urlpatterns = [
+# Authentication
+auth_patterns = [
     path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('signup/', views.signup_view, name='signup'),
-    path('profile/', views.user_profile, name='profile'),
-    path('dashboard/', views.user_dashboard, name='dashboard'),
-    path('settings/', views.user_settings, name='settings'),
+]
+
+# Main Dashboard (Role-based routing)
+dashboard_patterns = [
+    path('dashboard/', views.dashboard, name='dashboard'),
+]
+
+# Customer Routes
+customer_patterns = [
+    path('customer/dashboard/', views.customer_dashboard, name='customer_dashboard'),
+    path('customer/find-services/', views.find_services, name='find_services'),
+    path('customer/my-bookings/', views.my_bookings, name='my_bookings'),
+    path('customer/profile/', views.customer_profile, name='customer_profile'),
+    path('customer/settings/', views.customer_settings, name='customer_settings'),
+]
+
+# Provider Routes
+provider_patterns = [
+    path('provider/dashboard/', views.provider_dashboard, name='provider_dashboard'),
+    path('provider/my-requests/', views.provider_requests, name='provider_requests'),
+    path('provider/my-services/', views.provider_services, name='provider_services'),
+    path('provider/profile/', views.provider_profile, name='provider_profile'),
+    path('provider/settings/', views.provider_settings, name='provider_settings'),
+    path('provider/register/', views.add_provider, name='add_provider'),
+]
+
+# Service & Booking Operations
+service_patterns = [
     path('providers/', views.providers, name='providers'),
     path('provider/<int:provider_id>/', views.provider_detail, name='provider_detail'),
-    path('register/', views.add_provider, name='add_provider'),
     path('booking/<int:provider_id>/', views.create_booking, name='booking_form'),
-    path('my-bookings/', views.my_bookings, name='my_bookings'),
-    path('provider-dashboard/', views.provider_dashboard, name='provider_dashboard'),
     path('booking/<int:booking_id>/update/<str:status>/', views.update_booking_status, name='update_booking_status'),
+    path('bookings/status/', views.bookings_status, name='bookings_status'),
 ]
+
+# Legacy routes (backwards compatibility)
+legacy_patterns = [
+    path('profile/', views.user_profile, name='profile'),
+    path('settings/', views.user_settings, name='settings'),
+    path('register/', views.add_provider, name='add_provider_legacy'),
+    path('provider-dashboard/', views.provider_dashboard, name='provider_dashboard_legacy'),
+    path('my-bookings/', views.my_bookings, name='my_bookings_legacy'),
+]
+
+urlpatterns = auth_patterns + dashboard_patterns + customer_patterns + provider_patterns + service_patterns + legacy_patterns

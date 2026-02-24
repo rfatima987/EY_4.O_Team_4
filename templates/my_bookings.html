@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .bookings-container {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 40px auto;
             padding: 20px;
         }
@@ -31,9 +31,10 @@
         }
 
         .bookings-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 20px !important;
+            width: 100% !important;
         }
 
         .booking-card {
@@ -42,6 +43,7 @@
             border-radius: 12px;
             padding: 25px;
             transition: all 0.2s ease;
+            width: 100% !important;
         }
 
         .booking-card:hover {
@@ -232,6 +234,10 @@
         }
 
         @media (max-width: 768px) {
+            .bookings-grid {
+                grid-template-columns: 1fr !important;
+            }
+
             .booking-card-header {
                 flex-direction: column;
             }
@@ -253,6 +259,7 @@
         <div class="bookings-header">
             <h1 class="bookings-title">My Bookings</h1>
             <p class="bookings-subtitle">Manage and track all your service bookings</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">Logged in as: <strong>{{ user.first_name }} {{ user.last_name }}</strong> ({{ user.email }})</p>
         </div>
 
         {% if bookings %}
@@ -266,17 +273,9 @@
                                 <div class="booking-service">{{ booking.service }}</div>
                             </div>
                             <div>
-                                {% if booking.status == 'pending' %}
-                                    <span class="status-badge status-pending">{{ booking.get_status_display }}</span>
-                                {% elif booking.status == 'approved' %}
-                                    <span class="status-badge status-approved">{{ booking.get_status_display }}</span>
-                                {% elif booking.status == 'rejected' %}
-                                    <span class="status-badge status-rejected">{{ booking.get_status_display }}</span>
-                                {% elif booking.status == 'completed' %}
-                                    <span class="status-badge status-completed">{{ booking.get_status_display }}</span>
-                                {% elif booking.status == 'cancelled' %}
-                                    <span class="status-badge status-cancelled">{{ booking.get_status_display }}</span>
-                                {% endif %}
+                                <span data-booking-id="{{ booking.id }}" class="status-badge {% if booking.status == 'pending' %}status-pending{% elif booking.status == 'approved' %}status-approved{% elif booking.status == 'rejected' %}status-rejected{% elif booking.status == 'completed' %}status-completed{% elif booking.status == 'cancelled' %}status-cancelled{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
                             </div>
                         </div>
 
@@ -330,5 +329,26 @@
     </div>
 
     {% include 'footer_new.html' %}
+
+    <script>
+        // Poll booking statuses every 5 seconds and update badges in-place
+        (function pollBookingStatus(){
+            fetch('{% url "bookings_status" %}', {credentials: 'same-origin'})
+                .then(function(res){ if(!res.ok) throw new Error('Network error'); return res.json(); })
+                .then(function(data){
+                    if(!data.bookings) return;
+                    Object.keys(data.bookings).forEach(function(id){
+                        var status = data.bookings[id];
+                        var el = document.querySelector('[data-booking-id="'+id+'"]');
+                        if(!el) return;
+                        el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                        el.classList.remove('status-pending','status-approved','status-rejected','status-completed','status-cancelled');
+                        el.classList.add('status-'+status);
+                    });
+                })
+                .catch(function(){ /* silent */ })
+                .finally(function(){ setTimeout(pollBookingStatus, 5000); });
+        })();
+    </script>
 </body>
 </html>

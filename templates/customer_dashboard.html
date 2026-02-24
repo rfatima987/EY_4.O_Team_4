@@ -1,0 +1,383 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --background: #f8f9fa;
+            --text-dark: #333;
+            --text-light: #666;
+            --border: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+
+        /* Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card.pending {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.completed {
+            border-left-color: var(--success);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .section-action {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .section-action:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Booking Cards List */
+        .bookings-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .booking-item:last-child {
+            border-bottom: none;
+        }
+
+        .booking-item:hover {
+            background: var(--background);
+        }
+
+        .booking-info {
+            flex-grow: 1;
+        }
+
+        .booking-provider {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .booking-service {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .booking-date {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .booking-status {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-completed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 123, 255, 0.05);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .action-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Empty State */
+        .empty-state {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-text {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .booking-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .booking-status {
+                width: 100%;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'header_role_based.html' %}
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+            <p class="dashboard-subtitle">Manage your service bookings and find nearby providers</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Bookings</div>
+                <div class="stat-value">{{ total_bookings }}</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value">{{ completed_bookings }}</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value">{{ pending_bookings }}</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <section>
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="quick-actions">
+                <div class="actions-grid">
+                    <a href="{% url 'find_services' %}" class="action-btn">
+                        <span class="action-icon">🔍</span>
+                        <span class="action-label">Find Services</span>
+                    </a>
+                    <a href="{% url 'my_bookings' %}" class="action-btn">
+                        <span class="action-icon">📅</span>
+                        <span class="action-label">My Bookings</span>
+                    </a>
+                    <a href="{% url 'customer_profile' %}" class="action-btn">
+                        <span class="action-icon">👤</span>
+                        <span class="action-label">Profile</span>
+                    </a>
+                    <a href="{% url 'providers' %}" class="action-btn">
+                        <span class="action-icon">👥</span>
+                        <span class="action-label">All Providers</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Bookings -->
+        <div class="section-header">
+            <h2 class="section-title">Recent Bookings</h2>
+            <a href="{% url 'my_bookings' %}" class="section-action">View All</a>
+        </div>
+
+        {% if recent_bookings %}
+            <div class="bookings-list">
+                {% for booking in recent_bookings %}
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <div class="booking-provider">{{ booking.provider.name }}</div>
+                            <div class="booking-service">{{ booking.service }}</div>
+                            <div class="booking-date">{{ booking.booking_date }} at {{ booking.booking_time|time:"g:i A" }}</div>
+                        </div>
+                        <div class="booking-status">
+                            <span class="status-badge status-{{ booking.status }}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3 class="empty-title">No Bookings Yet</h3>
+                <p class="empty-text">Start by finding a service provider that matches your needs.</p>
+                <a href="{% url 'find_services' %}" class="section-action">Find Services</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% include 'footer.html' %}
+</body>
+</html>

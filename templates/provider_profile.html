@@ -377,29 +377,35 @@
     <div class="provider-profile-page">
         <!-- Profile Hero -->
         <div class="profile-hero">
-            <div class="profile-avatar">⚡</div>
-            
+            <div class="profile-avatar">
+                {% if provider.avatar_url %}
+                    <img src="{{ provider.avatar_url }}" alt="{{ provider.name }}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;" />
+                {% else %}
+                    {{ provider.name|slice:":1" }}
+                {% endif %}
+            </div>
+
             <div class="profile-info">
-                <h1>Raj Kumar</h1>
-                <div class="profile-category">Professional Electrician</div>
-                
+                <h1>{{ provider.name }}</h1>
+                <div class="profile-category">{{ provider.profession }}</div>
+
                 <div class="profile-rating">
-                    <span class="rating-stars">★★★★★</span>
-                    <span style="font-size: 14px;">(287 verified reviews)</span>
+                    <span class="rating-stars">{% for i in "12345" %}★{% endfor %}</span>
+                    <span style="font-size: 14px;">({{ provider.total_jobs }} verified jobs)</span>
                 </div>
 
                 <div class="profile-stats">
                     <div class="stat">
-                        <div class="stat-value">4.8</div>
+                        <div class="stat-value">{{ provider.rating|default:"0.0" }}</div>
                         <div class="stat-label">Rating</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">287</div>
+                        <div class="stat-value">{{ provider.total_jobs }}</div>
                         <div class="stat-label">Jobs Done</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">12+</div>
-                        <div class="stat-label">Experience</div>
+                        <div class="stat-value">{{ provider.experience_years }}{% if provider.experience_years and provider.experience_years > 0 %}+{% endif %}</div>
+                        <div class="stat-label">Experience (yrs)</div>
                     </div>
                 </div>
             </div>

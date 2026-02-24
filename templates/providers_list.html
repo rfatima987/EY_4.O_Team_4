@@ -325,215 +325,43 @@
 
         <!-- Providers Grid -->
         <div class="providers-list">
-            <!-- Provider 1 -->
+            {% for provider in providers %}
             <div class="provider-card-large">
                 <div class="provider-header">
-                    <div class="provider-avatar">⚡</div>
-                    <div class="provider-name-large">Raj Kumar</div>
-                    <div class="provider-category">Electrician</div>
+                    <div class="provider-avatar">{% if provider.avatar_url %}<img src="{{ provider.avatar_url }}" alt="{{ provider.name }}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;" />{% else %}⚡{% endif %}</div>
+                    <div class="provider-name-large">{{ provider.name }}</div>
+                    <div class="provider-category">{{ provider.profession }}</div>
                 </div>
                 <div class="provider-body">
                     <div class="provider-stats">
                         <div class="stat">
-                            <div class="stat-value">4.8</div>
+                            <div class="stat-value">{{ provider.rating|default:"0.0" }}</div>
                             <div class="stat-label">Rating</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-value">287</div>
+                            <div class="stat-value">{{ provider.total_jobs|default:0 }}</div>
                             <div class="stat-label">Reviews</div>
                         </div>
                     </div>
 
                     <div class="provider-rating">
-                        <span class="rating-stars">★★★★★</span>
-                        <span class="rating-count">(287 reviews)</span>
+                        <span class="rating-stars">{% for i in "12345" %}★{% endfor %}</span>
+                        <span class="rating-count">({{ provider.total_jobs|default:0 }} reviews)</span>
                     </div>
 
                     <p class="provider-description">
-                        Professional electrician with 12+ years of experience. Residential and commercial services available.
+                        {{ provider.bio|default:"Professional service provider." }}
                     </p>
 
                     <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 1 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543210" class="secondary-action">📞 Call</a>
+                        <a href="{% url 'provider_detail' provider.id %}" class="primary-action">View Profile</a>
+                        <a href="tel:{{ provider.phone|default:'#' }}" class="secondary-action">📞 Call</a>
                     </div>
                 </div>
             </div>
-
-            <!-- Provider 2 -->
-            <div class="provider-card-large">
-                <div class="provider-header">
-                    <div class="provider-avatar">🚿</div>
-                    <div class="provider-name-large">Mohit Singh</div>
-                    <div class="provider-category">Plumber</div>
-                </div>
-                <div class="provider-body">
-                    <div class="provider-stats">
-                        <div class="stat">
-                            <div class="stat-value">4.6</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">145</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                    </div>
-
-                    <div class="provider-rating">
-                        <span class="rating-stars">★★★★☆</span>
-                        <span class="rating-count">(145 reviews)</span>
-                    </div>
-
-                    <p class="provider-description">
-                        Expert plumber specializing in pipe repairs, installations, and maintenance services.
-                    </p>
-
-                    <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 2 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543211" class="secondary-action">📞 Call</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Provider 3 -->
-            <div class="provider-card-large">
-                <div class="provider-header">
-                    <div class="provider-avatar">🧹</div>
-                    <div class="provider-name-large">Priya Sharma</div>
-                    <div class="provider-category">Cleaning Services</div>
-                </div>
-                <div class="provider-body">
-                    <div class="provider-stats">
-                        <div class="stat">
-                            <div class="stat-value">4.9</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">512</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                    </div>
-
-                    <div class="provider-rating">
-                        <span class="rating-stars">★★★★★</span>
-                        <span class="rating-count">(512 reviews)</span>
-                    </div>
-
-                    <p class="provider-description">
-                        Professional cleaning services for homes and offices. Eco-friendly products used.
-                    </p>
-
-                    <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 3 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543212" class="secondary-action">📞 Call</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Provider 4 -->
-            <div class="provider-card-large">
-                <div class="provider-header">
-                    <div class="provider-avatar">❄️</div>
-                    <div class="provider-name-large">Arun Patel</div>
-                    <div class="provider-category">AC Specialist</div>
-                </div>
-                <div class="provider-body">
-                    <div class="provider-stats">
-                        <div class="stat">
-                            <div class="stat-value">4.8</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">198</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                    </div>
-
-                    <div class="provider-rating">
-                        <span class="rating-stars">★★★★★</span>
-                        <span class="rating-count">(198 reviews)</span>
-                    </div>
-
-                    <p class="provider-description">
-                        AC maintenance, repair, and installation. All brands covered. 24/7 emergency service.
-                    </p>
-
-                    <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 4 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543213" class="secondary-action">📞 Call</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Provider 5 -->
-            <div class="provider-card-large">
-                <div class="provider-header">
-                    <div class="provider-avatar">🚗</div>
-                    <div class="provider-name-large">Vikram Auto</div>
-                    <div class="provider-category">Car Mechanic</div>
-                </div>
-                <div class="provider-body">
-                    <div class="provider-stats">
-                        <div class="stat">
-                            <div class="stat-value">4.7</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">356</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                    </div>
-
-                    <div class="provider-rating">
-                        <span class="rating-stars">★★★★☆</span>
-                        <span class="rating-count">(356 reviews)</span>
-                    </div>
-
-                    <p class="provider-description">
-                        Complete car repair and maintenance services. Original spare parts warranty.
-                    </p>
-
-                    <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 5 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543214" class="secondary-action">📞 Call</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Provider 6 -->
-            <div class="provider-card-large">
-                <div class="provider-header">
-                    <div class="provider-avatar">🏠</div>
-                    <div class="provider-name-large">Home Pros</div>
-                    <div class="provider-category">General Repairs</div>
-                </div>
-                <div class="provider-body">
-                    <div class="provider-stats">
-                        <div class="stat">
-                            <div class="stat-value">4.9</div>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">623</div>
-                            <div class="stat-label">Reviews</div>
-                        </div>
-                    </div>
-
-                    <div class="provider-rating">
-                        <span class="rating-stars">★★★★★</span>
-                        <span class="rating-count">(623 reviews)</span>
-                    </div>
-
-                    <p class="provider-description">
-                        All types of home repairs and maintenance. Quick response and fair pricing.
-                    </p>
-
-                    <div class="provider-actions">
-                        <a href="{% url 'provider_detail' 6 %}" class="primary-action">View Profile</a>
-                        <a href="tel:+919876543215" class="secondary-action">📞 Call</a>
-                    </div>
-                </div>
-            </div>
+            {% empty %}
+            <p>No providers found.</p>
+            {% endfor %}
         </div>
     </div>
 

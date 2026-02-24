@@ -1,0 +1,351 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Services - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --success: #28a745;
+            --warning: #ffc107;
+            --background: #f8f9fa;
+            --text-dark: #333;
+            --text-light: #666;
+            --border: #ddd;
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .filter-button {
+            padding: 0.75rem 2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Providers Grid */
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .provider-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .provider-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .provider-avatar {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .provider-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .provider-profession {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0.25rem 0 0 0;
+        }
+
+        .provider-body {
+            padding: 1.5rem;
+        }
+
+        .provider-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stars {
+            color: var(--warning);
+            font-size: 1.2rem;
+        }
+
+        .rating-value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .provider-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .info-icon {
+            margin-top: 2px;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        .provider-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .providers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'header_role_based.html' %}
+
+    <div class="page-container">
+        <div class="page-header">
+            <h1 class="page-title">Find Services</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <form method="get" class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search Services</label>
+                    <input type="text" name="q" class="filter-input" placeholder="Plumbing, Electrician..." value="{{ search_query }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Profession</label>
+                    <input type="text" name="profession" class="filter-input" placeholder="e.g., Plumber" value="{{ selected_profession }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Location</label>
+                    <input type="text" name="location" class="filter-input" placeholder="City or area" value="{{ selected_location }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Min Rating</label>
+                    <select name="rating" class="filter-input">
+                        <option value="">Any Rating</option>
+                        <option value="4">⭐ 4.0+</option>
+                        <option value="4.5">⭐ 4.5+</option>
+                    </select>
+                </div>
+                <button type="submit" class="filter-button">Search</button>
+            </form>
+        </div>
+
+        <!-- Providers List -->
+        {% if providers %}
+            <div class="providers-grid">
+                {% for provider in providers %}
+                    <div class="provider-card">
+                        <div class="provider-header">
+                            <div class="provider-avatar">🔧</div>
+                            <h3 class="provider-name">{{ provider.name }}</h3>
+                            <p class="provider-profession">{{ provider.profession }}</p>
+                        </div>
+                        <div class="provider-body">
+                            <div class="provider-rating">
+                                <span class="stars">
+                                    {% for i in "12345" %}
+                                        {% if i|add:0 <= provider.rating %}⭐{% else %}☆{% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="rating-value">{{ provider.rating|floatformat:1 }}</span>
+                            </div>
+
+                            <div class="provider-info">
+                                <div class="info-item">
+                                    <span class="info-icon">📍</span>
+                                    <span class="info-text">{{ provider.city|default:"Location not specified" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">⏱️</span>
+                                    <span class="info-text">{{ provider.experience_years }} years experience</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">💰</span>
+                                    <span class="info-text">${{ provider.hourly_rate|floatformat:2 }}/hour</span>
+                                </div>
+                                {% if provider.bio %}
+                                    <div class="info-item">
+                                        <span class="info-icon">📝</span>
+                                        <span class="info-text">{{ provider.bio|truncatewords:15 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="provider-actions">
+                                <a href="{% url 'provider_detail' provider.id %}" class="btn btn-secondary">View Profile</a>
+                                <a href="{% url 'booking_form' provider.id %}" class="btn btn-primary">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="providers-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3 class="empty-title">No Providers Found</h3>
+                    <p class="empty-text">Try adjusting your search filters.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% include 'footer.html' %}
+</body>
+</html>

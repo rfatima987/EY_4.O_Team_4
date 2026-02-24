@@ -1,0 +1,476 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --background: #f8f9fa;
+            --text-dark: #333;
+            --text-light: #666;
+            --border: #ddd;
+        }
+
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Settings Layout */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+
+        .settings-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .settings-link {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: var(--text-dark);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .settings-link:hover {
+            background: var(--background);
+            color: var(--primary);
+        }
+
+        .settings-link.active {
+            background: var(--background);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Settings Content */
+        .settings-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .content-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .content-description {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        /* Form */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-helper {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .settings-link {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'header_role_based.html' %}
+
+    <div class="settings-container">
+        <div class="page-header">
+            <h1 class="page-title">Settings</h1>
+        </div>
+
+        <div class="settings-layout">
+            <!-- Sidebar -->
+            <div class="settings-sidebar">
+                <a href="#account" class="settings-link active" onclick="showSection('account')">⚙️ Account</a>
+                <a href="#password" class="settings-link" onclick="showSection('password')">🔐 Password</a>
+                <a href="#notifications" class="settings-link" onclick="showSection('notifications')">🔔 Notifications</a>
+                <a href="#privacy" class="settings-link" onclick="showSection('privacy')">🔒 Privacy</a>
+                <a href="#help" class="settings-link" onclick="showSection('help')">❓ Help</a>
+            </div>
+
+            <!-- Content -->
+            <div class="settings-content">
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Account Settings -->
+                <div id="account-section" class="settings-section">
+                    <h2 class="content-title">Account Settings</h2>
+                    <p class="content-description">Manage your personal information and account details.</p>
+
+                    <form method="post" id="account-form">
+                        {% csrf_token %}
+
+                        <div class="form-section">
+                            <h3 class="form-section-title">Personal Information</h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" name="first_name" class="form-input" value="{{ user.first_name }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" name="last_name" class="form-input" value="{{ user.last_name }}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" value="{{ user.email }}" disabled>
+                                <p class="form-helper">Email cannot be changed.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" name="action" value="update_account">Save Changes</button>
+                            <a href="{% url 'customer_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Password Settings -->
+                <div id="password-section" class="settings-section" style="display: none;">
+                    <h2 class="content-title">Change Password</h2>
+                    <p class="content-description">Update your password to keep your account secure.</p>
+
+                    <form method="post" id="password-form">
+                        {% csrf_token %}
+
+                        <div class="form-section">
+                            <h3 class="form-section-title">Password Change</h3>
+
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" name="old_password" class="form-input" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" name="new_password" class="form-input" required>
+                                <p class="form-helper">At least 8 characters recommended.</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="confirm_password" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" name="action" value="update_password">Change Password</button>
+                            <a href="{% url 'customer_settings' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notifications Settings -->
+                <div id="notifications-section" class="settings-section" style="display: none;">
+                    <h2 class="content-title">Notification Preferences</h2>
+                    <p class="content-description">Control how we communicate with you.</p>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Email Notifications</h3>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked>
+                                <span>Booking status updates</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked>
+                                <span>Provider messages</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox">
+                                <span>Weekly newsletter</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox">
+                                <span>Special promotions</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary">Save Preferences</button>
+                    </div>
+                </div>
+
+                <!-- Privacy Settings -->
+                <div id="privacy-section" class="settings-section" style="display: none;">
+                    <h2 class="content-title">Privacy & Security</h2>
+                    <p class="content-description">Control your privacy and data security settings.</p>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Data & Privacy</h3>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked>
+                                <span>Show my profile to service providers</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked>
+                                <span>Allow providers to contact me</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Account Deletion</h3>
+                        <p class="content-description">Permanently delete your account and all associated data.</p>
+                        <button class="btn btn-danger">Delete Account</button>
+                    </div>
+                </div>
+
+                <!-- Help & Support -->
+                <div id="help-section" class="settings-section" style="display: none;">
+                    <h2 class="content-title">Help & Support</h2>
+                    <p class="content-description">Need assistance? We're here to help.</p>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Frequently Asked Questions</h3>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How do I book a service?</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Use the "Find Services" page to search for providers, view their profiles, and click "Book Now" to create a booking.</p>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="font-weight: 600; margin-bottom: 0.5rem;">How can I track my booking?</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Go to "My Bookings" to see the status of all your bookings in real-time.</p>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h4 style="font-weight: 600; margin-bottom: 0.5rem;">What if I need to cancel a booking?</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">You can cancel a pending booking from the "My Bookings" page. Contact us for cancellation policies.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Contact Support</h3>
+                        <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 1rem;">Email: support@fixnear.com</p>
+                        <p style="color: var(--text-light); font-size: 0.9rem;">Phone: 1-800-FIXNEAR</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script>
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Remove active class from all links
+            document.querySelectorAll('.settings-link').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected section
+            const sectionId = sectionName + '-section';
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.style.display = 'block';
+            }
+
+            // Add active class to clicked link
+            event.target.classList.add('active');
+
+            // Prevent page scroll
+            event.preventDefault();
+        }
+
+        // Show first section on load
+        document.getElementById('account-section').style.display = 'block';
+    </script>
+</body>
+</html>

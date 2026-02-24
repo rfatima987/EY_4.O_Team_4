@@ -1,0 +1,309 @@
+<!-- Role-Based Navigation Header -->
+<nav class="navbar navbar-main">
+    <div class="navbar-container">
+        <!-- Logo -->
+        <div class="navbar-logo">
+            <a href="{% url 'home' %}">
+                <span class="logo-icon">🔧</span>
+                <span class="logo-text">FixNear</span>
+            </a>
+        </div>
+
+        <!-- Main Navigation -->
+        <ul class="navbar-menu">
+            {% if user.is_authenticated %}
+                {% if user.serviceprovider %}
+                    <!-- Provider Navigation -->
+                    <li class="nav-item">
+                        <a href="{% url 'provider_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'provider_dashboard' %}active{% endif %}">
+                            📊 Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'provider_requests' %}" class="nav-link {% if request.resolver_match.url_name == 'provider_requests' %}active{% endif %}">
+                            📬 My Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'provider_services' %}" class="nav-link {% if request.resolver_match.url_name == 'provider_services' %}active{% endif %}">
+                            🛠️ Services
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'provider_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'provider_profile' %}active{% endif %}">
+                            👤 Profile
+                        </a>
+                    </li>
+                {% else %}
+                    <!-- Customer Navigation -->
+                    <li class="nav-item">
+                        <a href="{% url 'customer_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'customer_dashboard' %}active{% endif %}">
+                            🏠 Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'find_services' %}" class="nav-link {% if request.resolver_match.url_name == 'find_services' %}active{% endif %}">
+                            🔍 Find Services
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'my_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+                            📅 My Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'customer_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'customer_profile' %}active{% endif %}">
+                            👤 Profile
+                        </a>
+                    </li>
+                {% endif %}
+
+                <!-- Common Items -->
+                <li class="nav-item nav-divider"></li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link nav-user">
+                        👤 {{ user.first_name|default:user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if user.serviceprovider %}
+                            <li><a href="{% url 'provider_settings' %}">⚙️ Settings</a></li>
+                        {% else %}
+                            <li><a href="{% url 'customer_settings' %}">⚙️ Settings</a></li>
+                        {% endif %}
+                        <li class="dropdown-divider"></li>
+                        <li><a href="{% url 'logout' %}">🚪 Logout</a></li>
+                    </ul>
+                </li>
+            {% else %}
+                <!-- Unauthenticated Navigation -->
+                <li class="nav-item">
+                    <a href="{% url 'find_services' %}" class="nav-link">
+                        🔍 Find Services
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'providers' %}" class="nav-link">
+                        👥 Providers
+                    </a>
+                </li>
+                <li class="nav-item nav-divider"></li>
+                <li class="nav-item">
+                    <a href="{% url 'login' %}" class="nav-link nav-login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'signup' %}" class="nav-link nav-signup btn">Sign Up</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="navbar-toggle" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</nav>
+
+<style>
+.navbar-main {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-logo a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary, #007bff);
+}
+
+.logo-icon {
+    font-size: 2rem;
+}
+
+.navbar-menu {
+    display: flex;
+    list-style: none;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.nav-item {
+    margin: 0;
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    color: var(--text-dark, #333);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.nav-link:hover {
+    background: var(--background, #f8f9fa);
+    color: var(--primary, #007bff);
+}
+
+.nav-link.active {
+    background: var(--primary, #007bff);
+    color: white;
+}
+
+.nav-divider {
+    width: 1px;
+    height: 30px;
+    background: #e0e0e0;
+    margin: 0 0.5rem;
+}
+
+.nav-login {
+    color: var(--primary, #007bff);
+}
+
+.nav-signup {
+    background: var(--primary, #007bff);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+}
+
+.nav-signup:hover {
+    background: var(--primary-dark, #0056b3);
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    list-style: none;
+    margin: 0.5rem 0 0 0;
+    padding: 0.5rem 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu li {
+    margin: 0;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    color: var(--text-dark, #333);
+    transition: all 0.2s ease;
+}
+
+.dropdown-menu a:hover {
+    background: var(--background, #f8f9fa);
+    color: var(--primary, #007bff);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 0.5rem 0;
+}
+
+/* Mobile Menu */
+.navbar-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    gap: 5px;
+}
+
+.navbar-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--text-dark, #333);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .navbar-toggle {
+        display: flex;
+    }
+
+    .navbar-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: white;
+        gap: 0;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .navbar-menu.active {
+        display: flex;
+    }
+
+    .nav-link {
+        width: 100%;
+        padding: 1rem 2rem;
+        border-radius: 0;
+    }
+
+    .nav-divider {
+        width: 100%;
+        height: 1px;
+        margin: 0;
+    }
+}
+</style>
+
+<script>
+function toggleMobileMenu() {
+    const menu = document.querySelector('.navbar-menu');
+    menu.classList.toggle('active');
+}
+
+// Close mobile menu when clicking on a link
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        document.querySelector('.navbar-menu').classList.remove('active');
+    });
+});
+</script>

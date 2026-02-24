@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-dark: #0056b3;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --background: #f8f9fa;
+            --text-dark: #333;
+            --text-light: #666;
+            --border: #ddd;
+        }
+
+        .requests-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+        }
+
+        /* Requests Grid */
+        .requests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .request-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .request-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .request-header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .request-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--warning);
+            color: #92400e;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .customer-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0.5rem 0 0 0;
+        }
+
+        .booking-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .detail-icon {
+            font-size: 1.2rem;
+            min-width: 1.5rem;
+        }
+
+        .detail-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Action Buttons */
+        .request-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--border);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #28a745;
+            opacity: 0.9;
+        }
+
+        .btn-reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c82333;
+        }
+
+        .btn-view {
+            background: var(--background);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-view:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .requests-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .request-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'header_role_based.html' %}
+
+    <div class="requests-container">
+        <div class="page-header">
+            <h1 class="page-title">My Requests</h1>
+            <p class="page-subtitle">Manage incoming booking requests from customers</p>
+        </div>
+
+        {% if requests %}
+            <div class="requests-grid">
+                {% for request in requests %}
+                    <div class="request-card">
+                        <div class="request-header">
+                            <div class="request-status">📋 Pending</div>
+                            <h3 class="customer-name">{{ request.customer_name }}</h3>
+                        </div>
+
+                        <div class="booking-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">🔧</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Service Requested</span>
+                                    <span class="detail-value">{{ request.service }}</span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-icon">📅</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Date & Time</span>
+                                    <span class="detail-value">{{ request.booking_date }} at {{ request.booking_time|time:"g:i A" }}</span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Location</span>
+                                    <span class="detail-value">{{ request.customer_address }}</span>
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-icon">📞</span>
+                                <div class="detail-text">
+                                    <span class="detail-label">Contact</span>
+                                    <span class="detail-value">{{ request.customer_phone }}</span>
+                                </div>
+                            </div>
+
+                            {% if request.notes %}
+                                <div class="detail-item">
+                                    <span class="detail-icon">📝</span>
+                                    <div class="detail-text">
+                                        <span class="detail-label">Notes</span>
+                                        <span class="detail-value">{{ request.notes }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="request-actions">
+                            <form method="post" action="{% url 'update_booking_status' request.id 'approved' %}" style="flex: 1;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-approve" onclick="return confirm('Are you sure you want to approve this booking?')">✓ Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'update_booking_status' request.id 'rejected' %}" style="flex: 1;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-reject" onclick="return confirm('Are you sure you want to reject this booking?')">✗ Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="requests-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <h3 class="empty-title">No Pending Requests</h3>
+                    <p style="color: var(--text-light);">You're all caught up! Check back soon for new booking requests.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% include 'footer.html' %}
+</body>
+</html>

@@ -4,6 +4,33 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import ServiceProvider, Booking
+from django.http import JsonResponse
+
+# Helper function to check if user is a provider
+def get_user_provider(user):
+    """Get provider for user or None if not a provider. Auto-links by email."""
+    if not user.is_authenticated:
+        return None
+    try:
+        return ServiceProvider.objects.get(user=user)
+    except ServiceProvider.DoesNotExist:
+        # Try to auto-link by email
+        if user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = user
+                provider.save()
+                return provider
+        return None
+
+# Helper function to add provider context to response
+def add_provider_context(context, user):
+    """Add 'is_provider' and 'provider' to context for role-based templates."""
+    provider = get_user_provider(user) if user.is_authenticated else None
+    context['is_provider'] = provider is not None
+    context['provider'] = provider
+    return context
 
 def home(request):
     """Home page with hero, services, how it works, and featured providers"""
@@ -238,12 +265,22 @@ def my_bookings(request):
 @login_required(login_url='login')
 def provider_dashboard(request):
     """Provider dashboard to manage bookings"""
-    # Check if user is a provider
+    # Resolve provider record linked to this user. If an existing provider profile
+    # was created earlier without linking to the user, try to auto-link by email.
+    provider = None
     try:
         provider = ServiceProvider.objects.get(user=request.user)
     except ServiceProvider.DoesNotExist:
-        messages.error(request, 'You are not registered as a service provider. Please register first.')
-        return redirect('add_provider')
+        # Try to find a provider profile with the same email and link it
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+        if not provider:
+            messages.error(request, 'You are not registered as a service provider. Please register first.')
+            return redirect('add_provider')
     
     bookings = Booking.objects.filter(provider=provider).order_by('-created_at')
     
@@ -264,17 +301,31 @@ def provider_dashboard(request):
 @login_required(login_url='login')
 def update_booking_status(request, booking_id, status):
     """Update booking status (approve/reject)"""
+    # Only allow POST requests for status updates
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method for updating booking status.')
+        return redirect('provider_dashboard')
+
     booking = get_object_or_404(Booking, id=booking_id)
     
     # Check if user is the provider
+    provider = None
     try:
         provider = ServiceProvider.objects.get(user=request.user)
-        if booking.provider != provider:
-            messages.error(request, 'You do not have permission to update this booking.')
-            return redirect('provider_dashboard')
     except ServiceProvider.DoesNotExist:
+        # Attempt to auto-link by email if possible
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+    if not provider:
         messages.error(request, 'You are not a service provider.')
         return redirect('home')
+    if booking.provider != provider:
+        messages.error(request, 'You do not have permission to update this booking.')
+        return redirect('provider_dashboard')
     
     # Validate status
     valid_statuses = ['approved', 'rejected', 'completed', 'cancelled']
@@ -294,3 +345,285 @@ def update_booking_status(request, booking_id, status):
     status_display = dict(booking.STATUS_CHOICES).get(status, status)
     messages.success(request, f'Booking #{booking.id} status updated to {status_display}.')
     return redirect('provider_dashboard')
+
+
+@login_required(login_url='login')
+def bookings_status(request):
+    """Return JSON statuses for current user's bookings (customer view)."""
+    bookings = Booking.objects.filter(customer_user=request.user).values('id', 'status')
+    data = {b['id']: b['status'] for b in bookings}
+    return JsonResponse({'bookings': data})
+
+
+# ==================== ROLE-BASED DASHBOARD ROUTING ====================
+
+@login_required(login_url='login')
+def dashboard(request):
+    """Smart dashboard that routes to customer or provider dashboard based on role"""
+    # Check if user is a provider
+    try:
+        provider = ServiceProvider.objects.get(user=request.user)
+        return redirect('provider_dashboard')
+    except ServiceProvider.DoesNotExist:
+        # Check if email matches an existing provider profile
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                return redirect('provider_dashboard')
+        # User is a customer
+        return redirect('customer_dashboard')
+
+
+# ==================== CUSTOMER VIEWS ====================
+
+@login_required(login_url='login')
+def customer_dashboard(request):
+    """Customer dashboard - overview of recent bookings and quick actions"""
+    user = request.user
+    recent_bookings = Booking.objects.filter(customer_user=user).order_by('-created_at')[:5]
+    total_bookings = Booking.objects.filter(customer_user=user).count()
+    completed_bookings = Booking.objects.filter(customer_user=user, status='completed').count()
+    pending_bookings = Booking.objects.filter(customer_user=user, status='pending').count()
+    
+    context = {
+        'user': user,
+        'recent_bookings': recent_bookings,
+        'total_bookings': total_bookings,
+        'completed_bookings': completed_bookings,
+        'pending_bookings': pending_bookings,
+    }
+    return render(request, 'customer_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def find_services(request):
+    """Customer page to find and search for service providers"""
+    providers = ServiceProvider.objects.all()
+    
+    # Search filters
+    search_query = request.GET.get('q', '')
+    if search_query:
+        providers = providers.filter(
+            profession__icontains=search_query
+        ) | providers.filter(
+            bio__icontains=search_query
+        )
+    
+    # Filter by profession
+    profession = request.GET.get('profession', '')
+    if profession:
+        providers = providers.filter(profession__icontains=profession)
+    
+    # Filter by location
+    location = request.GET.get('location', '')
+    if location:
+        providers = providers.filter(city__icontains=location)
+    
+    # Filter by rating
+    min_rating = request.GET.get('rating', '')
+    if min_rating:
+        try:
+            providers = providers.filter(rating__gte=float(min_rating))
+        except (ValueError, TypeError):
+            pass
+    
+    # Sort
+    sort_by = request.GET.get('sort', '-rating')
+    if sort_by in ['-rating', 'experience_years', 'hourly_rate']:
+        providers = providers.order_by(sort_by)
+    
+    context = {
+        'providers': providers,
+        'search_query': search_query,
+        'selected_profession': profession,
+        'selected_location': location,
+    }
+    return render(request, 'find_services.html', add_provider_context(context, request.user))
+
+
+@login_required(login_url='login')
+def customer_profile(request):
+    """Customer profile page - view and edit personal information"""
+    user = request.user
+    
+    if request.method == 'POST':
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('customer_profile')
+    
+    # Get booking stats
+    total_bookings = Booking.objects.filter(customer_user=user).count()
+    completed_bookings = Booking.objects.filter(customer_user=user, status='completed').count()
+    
+    context = {
+        'user': user,
+        'total_bookings': total_bookings,
+        'completed_bookings': completed_bookings,
+    }
+    return render(request, 'customer_profile.html', context)
+
+
+@login_required(login_url='login')
+def customer_settings(request):
+    """Customer settings page - preferences and account settings"""
+    user = request.user
+    
+    if request.method == 'POST':
+        # Handle settings update
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        
+        # Update password if provided
+        old_password = request.POST.get('old_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if old_password and new_password and confirm_password:
+            if user.check_password(old_password):
+                if new_password == confirm_password:
+                    user.set_password(new_password)
+                    messages.success(request, 'Password changed successfully!')
+                else:
+                    messages.error(request, 'New passwords do not match.')
+            else:
+                messages.error(request, 'Current password is incorrect.')
+        
+        user.save()
+        if not (old_password and new_password):
+            messages.success(request, 'Settings updated successfully!')
+        return redirect('customer_settings')
+    
+    context = {'user': user}
+    return render(request, 'customer_settings.html', context)
+
+
+# ==================== PROVIDER VIEWS ====================
+
+@login_required(login_url='login')
+def provider_requests(request):
+    """Provider page - view all incoming booking requests"""
+    # Get or auto-link provider
+    provider = get_user_provider(request.user)
+    if not provider:
+        messages.error(request, 'Please register as a service provider first.')
+        return redirect('add_provider')
+    
+    # Get all pending bookings for this provider
+    pending_requests = Booking.objects.filter(provider=provider, status='pending').order_by('-created_at')
+    
+    context = {
+        'provider': provider,
+        'requests': pending_requests,
+    }
+    return render(request, 'provider_requests.html', add_provider_context(context, request.user))
+
+
+@login_required(login_url='login')
+def provider_services(request):
+    """Provider page - manage services offered"""
+    try:
+        provider = ServiceProvider.objects.get(user=request.user)
+    except ServiceProvider.DoesNotExist:
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+        if not provider:
+            messages.error(request, 'Please register as a service provider first.')
+            return redirect('add_provider')
+    
+    if request.method == 'POST':
+        # Update service information
+        provider.service_type = request.POST.get('service_type', provider.service_type)
+        provider.profession = request.POST.get('profession', provider.profession)
+        provider.hourly_rate = request.POST.get('hourly_rate', provider.hourly_rate)
+        provider.call_charge = request.POST.get('call_charge', provider.call_charge)
+        provider.bio = request.POST.get('bio', provider.bio)
+        provider.save()
+        messages.success(request, 'Services updated successfully!')
+        return redirect('provider_services')
+    
+    context = {'provider': provider}
+    return render(request, 'provider_services.html', context)
+
+
+@login_required(login_url='login')
+def provider_profile(request):
+    """Provider profile page - view and edit professional information"""
+    try:
+        provider = ServiceProvider.objects.get(user=request.user)
+    except ServiceProvider.DoesNotExist:
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+        if not provider:
+            messages.error(request, 'Please register as a service provider first.')
+            return redirect('add_provider')
+    
+    if request.method == 'POST':
+        # Update provider profile
+        provider.name = request.POST.get('name', provider.name)
+        provider.profession = request.POST.get('profession', provider.profession)
+        provider.experience_years = int(request.POST.get('experience_years', provider.experience_years))
+        provider.phone = request.POST.get('phone', provider.phone)
+        provider.address = request.POST.get('address', provider.address)
+        provider.city = request.POST.get('city', provider.city)
+        provider.bio = request.POST.get('bio', provider.bio)
+        provider.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('provider_profile')
+    
+    # Get provider stats
+    total_bookings = Booking.objects.filter(provider=provider).count()
+    completed_bookings = Booking.objects.filter(provider=provider, status='completed').count()
+    
+    context = {
+        'provider': provider,
+        'total_bookings': total_bookings,
+        'completed_bookings': completed_bookings,
+    }
+    return render(request, 'provider_profile.html', context)
+
+
+@login_required(login_url='login')
+def provider_settings(request):
+    """Provider settings page - manage account and notification settings"""
+    try:
+        provider = ServiceProvider.objects.get(user=request.user)
+    except ServiceProvider.DoesNotExist:
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+        if not provider:
+            messages.error(request, 'Please register as a service provider first.')
+            return redirect('add_provider')
+    
+    if request.method == 'POST':
+        # Update availability
+        provider.availability = request.POST.get('availability', provider.availability)
+        
+        # Update user info
+        request.user.first_name = request.POST.get('first_name', request.user.first_name)
+        request.user.last_name = request.POST.get('last_name', request.user.last_name)
+        request.user.save()
+        
+        provider.save()
+        messages.success(request, 'Settings updated successfully!')
+        return redirect('provider_settings')
+    
+    context = {
+        'provider': provider,
+        'user': request.user,
+    }
+    return render(request, 'provider_settings.html', context)

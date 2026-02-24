@@ -352,16 +352,19 @@
 
                                 <div class="booking-actions">
                                     {% if booking.status == 'pending' %}
-                                        <a href="{% url 'update_booking_status' booking.id 'approved' %}" class="btn btn-approve">
-                                            ✓ Approve
-                                        </a>
-                                        <a href="{% url 'update_booking_status' booking.id 'rejected' %}" class="btn btn-reject">
-                                            ✗ Reject
-                                        </a>
+                                        <form action="{% url 'update_booking_status' booking.id 'approved' %}" method="post" style="display:inline;">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+                                            <button type="submit" class="btn btn-approve" onclick="return confirm('Approve this booking?');">✓ Approve</button>
+                                        </form>
+                                        <form action="{% url 'update_booking_status' booking.id 'rejected' %}" method="post" style="display:inline;">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+                                            <button type="submit" class="btn btn-reject" onclick="return confirm('Reject this booking?');">✗ Reject</button>
+                                        </form>
                                     {% elif booking.status == 'approved' %}
-                                        <a href="{% url 'update_booking_status' booking.id 'completed' %}" class="btn btn-approve">
-                                            ✓ Mark Complete
-                                        </a>
+                                        <form action="{% url 'update_booking_status' booking.id 'completed' %}" method="post" style="display:inline;">
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+                                            <button type="submit" class="btn btn-approve" onclick="return confirm('Mark this booking complete?');">✓ Mark Complete</button>
+                                        </form>
                                     {% endif %}
                                 </div>
                             </div>
