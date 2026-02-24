@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header_new.html' %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 40px 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 48px;
+    }
+
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .profile-email {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 8px;
+    }
+
+    .profile-content {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 30px;
+    }
+
+    .profile-section {
+        margin-bottom: 30px;
+    }
+
+    .profile-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .profile-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .profile-value {
+        font-size: 16px;
+        color: var(--text-dark);
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+        background: var(--background);
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <h1 class="profile-name">{{ user.first_name }} {{ user.last_name }}</h1>
+        <p class="profile-email">{{ user.email }}</p>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-section">
+            <div class="profile-label">First Name</div>
+            <div class="profile-value">{{ user.first_name }}</div>
+        </div>
+
+        <div class="profile-section">
+            <div class="profile-label">Last Name</div>
+            <div class="profile-value">{{ user.last_name }}</div>
+        </div>
+
+        <div class="profile-section">
+            <div class="profile-label">Email Address</div>
+            <div class="profile-value">{{ user.email }}</div>
+        </div>
+
+        <div class="profile-section">
+            <div class="profile-label">Account Created</div>
+            <div class="profile-value">{{ user.date_joined|date:"M d, Y" }}</div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'settings' %}" class="btn btn-primary">Edit Profile</a>
+            <a href="{% url 'home' %}" class="btn btn-outline">Back to Home</a>
+        </div>
+    </div>
+</div>
+
+    {% include 'footer_new.html' %}
+</body>
+</html>

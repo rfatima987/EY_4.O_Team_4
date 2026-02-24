@@ -1,0 +1,334 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .bookings-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .bookings-header {
+            margin-bottom: 40px;
+        }
+
+        .bookings-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0 0 10px 0;
+        }
+
+        .bookings-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .bookings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .booking-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.2s ease;
+        }
+
+        .booking-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .booking-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .booking-info {
+            flex-grow: 1;
+        }
+
+        .booking-id {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .booking-provider {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .booking-service {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #86efac;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-completed {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .status-cancelled {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .booking-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            padding: 15px;
+            background: var(--background);
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--background);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .empty-description {
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .status-label {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .booking-card-header {
+                flex-direction: column;
+            }
+
+            .status-badge {
+                margin-top: 15px;
+            }
+
+            .booking-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'header_new.html' %}
+
+    <div class="bookings-container">
+        <div class="bookings-header">
+            <h1 class="bookings-title">My Bookings</h1>
+            <p class="bookings-subtitle">Manage and track all your service bookings</p>
+        </div>
+
+        {% if bookings %}
+            <div class="bookings-grid">
+                {% for booking in bookings %}
+                    <div class="booking-card">
+                        <div class="booking-card-header">
+                            <div class="booking-info">
+                                <div class="booking-id">Booking #{{ booking.id }}</div>
+                                <h3 class="booking-provider">{{ booking.provider.name }}</h3>
+                                <div class="booking-service">{{ booking.service }}</div>
+                            </div>
+                            <div>
+                                {% if booking.status == 'pending' %}
+                                    <span class="status-badge status-pending">{{ booking.get_status_display }}</span>
+                                {% elif booking.status == 'approved' %}
+                                    <span class="status-badge status-approved">{{ booking.get_status_display }}</span>
+                                {% elif booking.status == 'rejected' %}
+                                    <span class="status-badge status-rejected">{{ booking.get_status_display }}</span>
+                                {% elif booking.status == 'completed' %}
+                                    <span class="status-badge status-completed">{{ booking.get_status_display }}</span>
+                                {% elif booking.status == 'cancelled' %}
+                                    <span class="status-badge status-cancelled">{{ booking.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="booking-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Booking Date</div>
+                                <div class="detail-value">{{ booking.booking_date|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Booking Time</div>
+                                <div class="detail-value">{{ booking.booking_time|time:"h:i A" }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value">{{ booking.customer_address|truncatewords:5 }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Provider Contact</div>
+                                <div class="detail-value">{{ booking.provider.phone }}</div>
+                            </div>
+                        </div>
+
+                        {% if booking.notes %}
+                            <div class="detail-item" style="margin-bottom: 15px;">
+                                <div class="detail-label">Your Notes</div>
+                                <div class="detail-value">{{ booking.notes }}</div>
+                            </div>
+                        {% endif %}
+
+                        <div class="booking-actions">
+                            <a href="{% url 'provider_detail' booking.provider.id %}" class="btn btn-outline">
+                                View Provider
+                            </a>
+                            {% if booking.status == 'pending' %}
+                                <button class="btn btn-danger" onclick="if(confirm('Cancel this booking?')) { window.location.href='{% url 'update_booking_status' booking.id 'cancelled' %}'; }">
+                                    Cancel Booking
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h2 class="empty-title">No Bookings Yet</h2>
+                <p class="empty-description">You haven't made any bookings. Start exploring and book a service provider today!</p>
+                <a href="{% url 'providers' %}" class="btn btn-primary">Browse Providers</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% include 'footer_new.html' %}
+</body>
+</html>

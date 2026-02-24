@@ -96,6 +96,40 @@
             gap: 10px;
         }
 
+        .book-btn-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .book-btn-large {
+            background: linear-gradient(135deg, #2563eb, #f59e0b);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .book-btn-large:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            background: linear-gradient(135deg, #1d4ed8, #f59e0b);
+        }
+
+        .book-btn-large:active {
+            transform: translateY(-1px);
+        }
+
         .action-btn {
             padding: 12px 20px;
             border: none;
@@ -371,8 +405,21 @@
             </div>
 
             <div class="profile-actions">
-                <a href="tel:+919876543210" class="action-btn call-btn">📞 Call Now</a>
-                <button class="action-btn message-btn">💬 Message</button>
+                <div class="book-btn-container">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'booking_form' provider.id %}" class="book-btn-large">
+                            📅 Book This Provider Now
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="book-btn-large">
+                            📅 Login to Book
+                        </a>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="tel:{{ provider.phone }}" class="action-btn call-btn">📞 Call Now</a>
+                    <button class="action-btn message-btn">💬 Message</button>
+                </div>
             </div>
         </div>
 

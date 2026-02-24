@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - FixNear</title>
+    <link rel="stylesheet" href="{% static 'style_new.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% include 'header_new.html' %}
+<style>
+    .settings-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .settings-header {
+        margin-bottom: 40px;
+    }
+
+    .settings-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0 0 10px 0;
+    }
+
+    .settings-subtitle {
+        font-size: 14px;
+        color: var(--text-light);
+    }
+
+    .settings-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 40px;
+    }
+
+    .settings-form-group {
+        margin-bottom: 25px;
+    }
+
+    .settings-form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .settings-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .settings-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .settings-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .settings-input:disabled {
+        background: var(--background);
+        color: var(--text-light);
+        cursor: not-allowed;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .settings-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 35px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+        background: var(--background);
+    }
+
+    .success-message {
+        background: #d1fae5;
+        border: 1px solid #10b981;
+        color: #059669;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        display: none;
+    }
+
+    .error-message {
+        background: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #991b1b;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        display: none;
+    }
+
+    .settings-section {
+        margin-bottom: 35px;
+        padding-bottom: 35px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .settings-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h1 class="settings-title">Settings</h1>
+        <p class="settings-subtitle">Manage your account preferences and information</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="success-message" style="display: block;">{{ message }}</div>
+            {% elif message.tags == 'error' %}
+                <div class="error-message" style="display: block;">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="settings-card">
+        <form method="POST" class="settings-form">
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="settings-section">
+                <h2 class="section-title">Personal Information</h2>
+
+                <div class="form-row">
+                    <div class="settings-form-group">
+                        <label class="settings-label">First Name</label>
+                        <input type="text" name="first_name" class="settings-input" value="{{ user.first_name }}" required>
+                    </div>
+
+                    <div class="settings-form-group">
+                        <label class="settings-label">Last Name</label>
+                        <input type="text" name="last_name" class="settings-input" value="{{ user.last_name }}" required>
+                    </div>
+                </div>
+
+                <div class="settings-form-group">
+                    <label class="settings-label">Email Address</label>
+                    <input type="email" name="email" class="settings-input" value="{{ user.email }}" required>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="settings-section">
+                <h2 class="section-title">Account Information</h2>
+
+                <div class="settings-form-group">
+                    <label class="settings-label">Username</label>
+                    <input type="text" class="settings-input" value="{{ user.username }}" disabled>
+                </div>
+
+                <div class="settings-form-group">
+                    <label class="settings-label">Member Since</label>
+                    <input type="text" class="settings-input" value="{{ user.date_joined|date:'M d, Y' }}" disabled>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="settings-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+    {% include 'footer_new.html' %}
+</body>
+</html>
