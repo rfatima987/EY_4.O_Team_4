@@ -291,7 +291,17 @@ def providers(request):
 def provider_detail(request, provider_id):
     """Detailed view of a single provider"""
     provider = get_object_or_404(ServiceProvider, id=provider_id)
-    return render(request, 'provider_profile.html', {'provider': provider})
+    # Prepare eligible bookings for the current user (completed bookings without review)
+    if request.user.is_authenticated:
+        eligible_bookings = provider.bookings.filter(customer_user=request.user, status='completed')
+    else:
+        eligible_bookings = Booking.objects.none()
+
+    context = {
+        'provider': provider,
+        'eligible_bookings': eligible_bookings,
+    }
+    return render(request, 'provider_profile.html', context)
 
 
 def provider_reviews_api(request, provider_id):
@@ -444,7 +454,8 @@ def add_provider(request):
             hourly_rate=hourly_rate or 0,
             call_charge=call_charge or 0,
             bio=bio,
-            availability=('available' if availability in ['24/7','available','weekdays','weekends','custom'] else 'available'),
+            # Respect explicit availability selection; default to 'available' if input is unexpected
+            availability=(availability if availability in ['available', 'not_available'] else 'available'),
             aadhar_number=aadhar
         )
         
@@ -535,6 +546,10 @@ def user_settings(request):
 def create_booking(request, provider_id):
     """Create a new booking for a provider"""
     provider = get_object_or_404(ServiceProvider, id=provider_id)
+    # Prevent booking creation or showing the booking form when provider is unavailable
+    if provider.availability != 'available':
+        messages.error(request, 'This provider is currently unavailable for bookings.')
+        return redirect('provider_detail', provider_id=provider_id)
     
     if request.method == 'POST':
         customer_name = request.POST.get('customer_name')
@@ -549,6 +564,18 @@ def create_booking(request, provider_id):
         # Validate required fields
         if not all([customer_name, customer_phone, customer_address, service, booking_date, booking_time]):
             messages.error(request, 'Please fill in all required fields.')
+            return redirect('booking_form', provider_id=provider_id)
+
+        # Prevent double-booking: if a booking exists for same provider/date/time
+        # (excluding cancelled or explicitly rejected bookings), block creation
+        conflict_exists = Booking.objects.filter(
+            provider=provider,
+            booking_date=booking_date,
+            booking_time=booking_time
+        ).exclude(status__in=['cancelled', 'rejected']).exists()
+
+        if conflict_exists:
+            messages.error(request, 'Selected date and time are not available. Please choose a different slot.')
             return redirect('booking_form', provider_id=provider_id)
         
         # Create booking

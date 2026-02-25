@@ -383,68 +383,33 @@
                 {% else %}
                     {{ provider.name|slice:":1" }}
                 {% endif %}
-                    {% for review in provider.reviews.all %}
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div>
-                                <div class="review-author">{{ review.user.get_full_name|default:review.user.username }}</div>
-                                <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
-                            </div>
-                            <div class="review-rating">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+            </div>
+
+            <div class="profile-info">
+                <h1>{{ provider.name }}</h1>
+                <div class="profile-category">{{ provider.profession|default:'Not specified' }}</div>
+                <div class="profile-rating">
+                    <span class="rating-stars">{% for i in "12345" %}{% if forloop.counter <= provider.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <div class="stat-value">{{ provider.total_jobs|default:0 }}</div>
+                            <div class="stat-label">Jobs</div>
                         </div>
-                        <p class="review-text">{{ review.comment|default:"No comment." }}</p>
+                        <div class="stat">
+                            <div class="stat-value">{{ provider.rating|default:0 }}</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
                     </div>
-                    {% empty %}
-                    <p>No reviews yet.</p>
-                    {% endfor %}
-
-                    {% if user.is_authenticated %}
-                        {% comment %} Determine eligible completed bookings for this user and provider {% endcomment %}
-                        {% with eligible_bookings=provider.bookings.filter(customer_user=user,status='completed') %}
-                            {% comment %} Filter out bookings that already have a review in backend - we'll pass only those without review via view where possible; in template we show bookings without review by checking `review` attr existence. {% endcomment %}
-                            {% if eligible_bookings %}
-                                <div style="margin-top:20px;">
-                                    <h3>Leave a review</h3>
-                                    <form id="review-form" method="POST" action="{% url 'submit_review' %}">
-                                        {% csrf_token %}
-                                        <label for="booking_id">Select completed booking</label>
-                                        <select name="booking_id" id="booking_id" class="form-input" required>
-                                            {% for b in eligible_bookings %}
-                                                {% if not b.review %}
-                                                    <option value="{{ b.id }}">Booking #{{ b.id }} — {{ b.booking_date }}</option>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </select>
-
-                                        <label for="rating" style="display:block; margin-top:8px;">Rating (1-5)</label>
-                                        <select name="rating" id="rating" class="form-input" required>
-                                            <option value="">Choose</option>
-                                            <option value="5">5</option>
-                                            <option value="4">4</option>
-                                            <option value="3">3</option>
-                                            <option value="2">2</option>
-                                            <option value="1">1</option>
-                                        </select>
-
-                                        <label for="comment" style="display:block; margin-top:8px;">Comment</label>
-                                        <textarea name="comment" id="comment" class="form-textarea" placeholder="Share your experience (optional)"></textarea>
-
-                                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                                        <div style="margin-top:12px;"><button type="submit" class="book-btn-large">Submit Review</button></div>
-                                    </form>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
-                    {% endif %}
-                            📅 Book This Provider Now
-                        </a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="book-btn-large">
-                            📅 Login to Book
-                        </a>
-                    {% endif %}
                 </div>
-                <div style="display: flex; gap: 10px;">
+            </div>
+
+            <div class="profile-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'booking_form' provider.id %}" class="book-btn-large">📅 Book This Provider Now</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="book-btn-large">📅 Login to Book</a>
+                {% endif %}
+                <div style="display: flex; gap: 10px; margin-top:10px;">
                     <a href="tel:{{ provider.phone }}" class="action-btn call-btn">📞 Call Now</a>
                     <button class="action-btn message-btn">💬 Message</button>
                 </div>
@@ -545,41 +510,39 @@
                     </div>
 
                     {% if user.is_authenticated %}
-                        {% with eligible_bookings=provider.bookings.filter(customer_user=user,status='completed') %}
-                            {% if eligible_bookings %}
-                                <div style="margin-top:20px;" id="leave-review">
-                                    <h3>Leave a review</h3>
-                                    <form id="review-form" method="POST" action="{% url 'submit_review' %}">
-                                        {% csrf_token %}
-                                        <label for="booking_id">Select completed booking</label>
-                                        <select name="booking_id" id="booking_id" class="form-input" required>
-                                            {% for b in eligible_bookings %}
-                                                {% if not b.review %}
-                                                    <option value="{{ b.id }}">Booking #{{ b.id }} — {{ b.booking_date }}</option>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </select>
+                        {% if eligible_bookings %}
+                            <div style="margin-top:20px;" id="leave-review">
+                                <h3>Leave a review</h3>
+                                <form id="review-form" method="POST" action="{% url 'submit_review' %}">
+                                    {% csrf_token %}
+                                    <label for="booking_id">Select completed booking</label>
+                                    <select name="booking_id" id="booking_id" class="form-input" required>
+                                        {% for b in eligible_bookings %}
+                                            {% if not b.review %}
+                                                <option value="{{ b.id }}">Booking #{{ b.id }} — {{ b.booking_date }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
 
-                                        <label for="rating" style="display:block; margin-top:8px;">Rating (1-5)</label>
-                                        <select name="rating" id="rating" class="form-input" required>
-                                            <option value="">Choose</option>
-                                            <option value="5">5</option>
-                                            <option value="4">4</option>
-                                            <option value="3">3</option>
-                                            <option value="2">2</option>
-                                            <option value="1">1</option>
-                                        </select>
+                                    <label for="rating" style="display:block; margin-top:8px;">Rating (1-5)</label>
+                                    <select name="rating" id="rating" class="form-input" required>
+                                        <option value="">Choose</option>
+                                        <option value="5">5</option>
+                                        <option value="4">4</option>
+                                        <option value="3">3</option>
+                                        <option value="2">2</option>
+                                        <option value="1">1</option>
+                                    </select>
 
-                                        <label for="comment" style="display:block; margin-top:8px;">Comment</label>
-                                        <textarea name="comment" id="comment" class="form-textarea" placeholder="Share your experience (optional)"></textarea>
+                                    <label for="comment" style="display:block; margin-top:8px;">Comment</label>
+                                    <textarea name="comment" id="comment" class="form-textarea" placeholder="Share your experience (optional)"></textarea>
 
-                                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                                        <div style="margin-top:12px;"><button type="submit" class="book-btn-large">Submit Review</button></div>
-                                    </form>
-                                    <div id="review-message" style="margin-top:10px; display:none;"></div>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
+                                    <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                                    <div style="margin-top:12px;"><button type="submit" class="book-btn-large">Submit Review</button></div>
+                                </form>
+                                <div id="review-message" style="margin-top:10px; display:none;"></div>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -637,9 +600,15 @@
                 <!-- CTA -->
                 <div class="sidebar-card" style="text-align: center; background: linear-gradient(135deg, var(--primary), var(--accent)); color: var(--white);">
                     <h3 style="color: var(--white); margin-bottom: 15px;">Need This Service?</h3>
-                    <a href="#" class="cta-btn cta-btn-primary" style="width: 100%; display: block; text-decoration: none; color: var(--text-dark); background: var(--white); margin-bottom: 10px;">
-                        Book Now
-                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'booking_form' provider.id %}" class="cta-btn cta-btn-primary" style="width: 100%; display: block; text-decoration: none; color: var(--text-dark); background: var(--white); margin-bottom: 10px;">
+                            Book Now
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="cta-btn cta-btn-primary" style="width: 100%; display: block; text-decoration: none; color: var(--text-dark); background: var(--white); margin-bottom: 10px;">
+                            Login to Book
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
