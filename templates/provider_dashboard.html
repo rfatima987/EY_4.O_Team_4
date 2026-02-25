@@ -35,10 +35,18 @@
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
             gap: 20px;
             margin-bottom: 40px;
+            align-items: stretch;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        /* Ensure each stat-card keeps a consistent size so they line up in one row */
+        .stat-card {
+            min-width: 200px;
+            flex: 0 0 220px;
         }
 
         .stat-card {

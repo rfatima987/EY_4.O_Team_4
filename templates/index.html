@@ -13,40 +13,7 @@
 
     {% include 'header_new.html' %}
 
-    <!-- ========== HERO SECTION ========== -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Find Trusted Local Service Providers Near You</h1>
-            <p class="hero-subtitle">
-                Electricians, plumbers, cleaners, mechanics, and more — all in one place. 
-                Quality services from verified professionals, instantly accessible.
-            </p>
-
-            <form class="hero-search" method="GET" action="{% url 'providers' %}">
-                <input 
-                    type="text" 
-                    class="hero-search-input" 
-                    name="service"
-                    placeholder="What service do you need?"
-                >
-                <input 
-                    type="text" 
-                    class="hero-search-input" 
-                    name="location"
-                    placeholder="Location or zip code"
-                >
-                <button type="submit" class="cta-btn cta-btn-primary" style="border: none; cursor: pointer; margin-left: 10px;">
-                    Find Now
-                </button>
-            </form>
-
-            <div class="hero-cta">
-                <a href="{% url 'add_provider' %}" class="cta-btn cta-btn-outline">
-                    Become a Provider
-                </a>
-            </div>
-        </div>
-    </section>
+    <!-- Hero section removed per request -->
 
     <!-- ========== SERVICES SECTION ========== -->
     <section class="services-section">
@@ -56,50 +23,51 @@
         </div>
 
         <div class="services-grid">
-            <div class="service-card">
+            {% comment %} Clickable service/category cards that link to providers filtered by service {% endcomment %}
+            <a class="service-card" href="{% url 'providers' %}?service=Electrical">
                 <div class="service-icon"><img src="{% static 'images/electrician.svg' %}" alt="Electrical Services" /></div>
                 <h3>Electrical</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=Plumbing">
                 <div class="service-icon"><img src="{% static 'images/plumber.svg' %}" alt="Plumbing Services" /></div>
                 <h3>Plumbing</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=Cleaning">
                 <div class="service-icon"><img src="{% static 'images/cleaner.svg' %}" alt="Cleaning Services" /></div>
                 <h3>Cleaning</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=AC">
                 <div class="service-icon"><img src="{% static 'images/ac-repair.svg' %}" alt="AC Repair" /></div>
                 <h3>AC Repair</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=Car">
                 <div class="service-icon"><img src="{% static 'images/mechanic.svg' %}" alt="Car Repair" /></div>
                 <h3>Car Repair</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=Carpentry">
                 <div class="service-icon"><img src="{% static 'images/carpenter.svg' %}" alt="Carpentry Services" /></div>
                 <h3>Carpentry</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=Painting">
                 <div class="service-icon"><img src="{% static 'images/painter.svg' %}" alt="Painting Services" /></div>
                 <h3>Painting</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=General">
                 <div class="service-icon"><img src="{% static 'images/general-services.svg' %}" alt="General Services" /></div>
                 <h3>General Services</h3>
-            </div>
+            </a>
 
-            <div class="service-card">
+            <a class="service-card" href="{% url 'providers' %}?service=More">
                 <div class="service-icon"><img src="{% static 'images/electrician.svg' %}" alt="More Services" /></div>
                 <h3>More Services</h3>
-            </div>
+            </a>
         </div>
     </section>
 
@@ -139,83 +107,42 @@
         </div>
 
         <div class="providers-grid">
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar1.svg' %}" alt="Raj Kumar" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Raj Kumar</div>
-                    <div class="provider-service">Electrician</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★★</span>
-                        <span>(287 reviews)</span>
+            {% if featured_providers %}
+                {% for provider in featured_providers %}
+                <div class="provider-card">
+                    <div class="provider-image">
+                        {% if provider.avatar_url %}
+                            <img src="{{ provider.avatar_url }}" alt="{{ provider.name }}" />
+                        {% else %}
+                            <img src="{% static 'images/avatar1.svg' %}" alt="{{ provider.name }}" />
+                        {% endif %}
                     </div>
-                    <button class="provider-btn">View Profile</button>
-                </div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar2.svg' %}" alt="Mohit Singh" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Mohit Singh</div>
-                    <div class="provider-service">Plumber</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★☆</span>
-                        <span>(145 reviews)</span>
+                    <div class="provider-info">
+                        <div class="provider-name">{{ provider.name }}</div>
+                        <div class="provider-service">{{ provider.profession }}</div>
+                        <div class="provider-rating">
+                            <span class="stars">{% for i in "12345" %}★{% endfor %}</span>
+                            <span>({{ provider.total_jobs|default:0 }} reviews)</span>
+                        </div>
+                        <a href="{% url 'provider_detail' provider.id %}" class="provider-btn">View Profile</a>
                     </div>
-                    <button class="provider-btn">View Profile</button>
                 </div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar3.svg' %}" alt="Priya Sharma" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Priya Sharma</div>
-                    <div class="provider-service">Cleaning Services</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★★</span>
-                        <span>(512 reviews)</span>
+                {% endfor %}
+            {% else %}
+                <!-- Fallback static providers -->
+                <div class="provider-card">
+                    <div class="provider-image"><img src="{% static 'images/avatar1.svg' %}" alt="Raj Kumar" /></div>
+                    <div class="provider-info">
+                        <div class="provider-name">Raj Kumar</div>
+                        <div class="provider-service">Electrician</div>
+                        <div class="provider-rating">
+                            <span class="stars">★★★★★</span>
+                            <span>(287 reviews)</span>
+                        </div>
+                        <a href="{% url 'providers' %}?service=Electrical" class="provider-btn">View Profile</a>
                     </div>
-                    <button class="provider-btn">View Profile</button>
                 </div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar1.svg' %}" alt="Arun Patel" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Arun Patel</div>
-                    <div class="provider-service">AC Specialist</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★★</span>
-                        <span>(198 reviews)</span>
-                    </div>
-                    <button class="provider-btn">View Profile</button>
-                </div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar2.svg' %}" alt="Vikram Auto" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Vikram Auto</div>
-                    <div class="provider-service">Car Mechanic</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★☆</span>
-                        <span>(356 reviews)</span>
-                    </div>
-                    <button class="provider-btn">View Profile</button>
-                </div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-image"><img src="{% static 'images/avatar3.svg' %}" alt="Home Pros" /></div>
-                <div class="provider-info">
-                    <div class="provider-name">Home Pros</div>
-                    <div class="provider-service">General Repairs</div>
-                    <div class="provider-rating">
-                        <span class="stars">★★★★★</span>
-                        <span>(623 reviews)</span>
-                    </div>
-                    <button class="provider-btn">View Profile</button>
-                </div>
-            </div>
+            {% endif %}
         </div>
 
         <div style="text-align: center; margin-top: 50px;">

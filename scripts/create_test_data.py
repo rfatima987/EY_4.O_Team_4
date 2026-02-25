@@ -1,7 +1,16 @@
 import os
+import sys
 import django
+# Ensure project root is on PYTHONPATH so Django settings package can be imported
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fixnear.settings')
-django.setup()
+try:
+    django.setup()
+except Exception as e:
+    print('Error setting up Django:', e)
+    raise
 from django.contrib.auth.models import User
 from services.models import ServiceProvider, Booking
 from django.utils import timezone
@@ -66,3 +75,40 @@ booking = Booking.objects.create(
 )
 print('Created booking id', booking.id)
 print('Done')
+
+# Additional sample providers across categories
+sample_providers = [
+    {'name':'Raj Kumar','email':'raj.elec@example.com','phone':'+911111111111','profession':'Electrician','location':'Mumbai','city':'Mumbai','bio':'Expert electrician with 10+ years experience.','rating':4.8,'total_jobs':287,'verified':True,'experience_years':12},
+    {'name':'Mohit Singh','email':'mohit.plumb@example.com','phone':'+911222222222','profession':'Plumber','location':'Mumbai','city':'Mumbai','bio':'Reliable plumber for homes and offices.','rating':4.5,'total_jobs':145,'verified':True,'experience_years':8},
+    {'name':'Priya Sharma','email':'priya.clean@example.com','phone':'+911333333333','profession':'Cleaner','location':'Pune','city':'Pune','bio':'Professional cleaning services with attention to detail.','rating':4.9,'total_jobs':512,'verified':True,'experience_years':6},
+    {'name':'Arun Patel','email':'arun.ac@example.com','phone':'+911444444444','profession':'AC Specialist','location':'Pune','city':'Pune','bio':'AC repair and maintenance specialist.','rating':4.7,'total_jobs':198,'verified':True,'experience_years':10},
+    {'name':'Vikram Auto','email':'vikram.auto@example.com','phone':'+911555555555','profession':'Car Mechanic','location':'Mumbai','city':'Mumbai','bio':'Experienced car mechanic for quick service.','rating':4.4,'total_jobs':356,'verified':True,'experience_years':9},
+]
+
+for sp in sample_providers:
+    prov, created = ServiceProvider.objects.get_or_create(email=sp['email'], defaults={
+        'name': sp['name'],
+        'phone': sp['phone'],
+        'profession': sp['profession'],
+        'location': sp['location'],
+        'city': sp['city'],
+        'address': f"{sp['city']} main street",
+        'bio': sp['bio'],
+        'avatar_url': '',
+        'rating': sp.get('rating', 0.0),
+        'total_jobs': sp.get('total_jobs', 0),
+        'verified': sp.get('verified', False),
+        'experience_years': sp.get('experience_years', 0),
+    })
+    if created:
+        print('Created sample provider', prov.email)
+    else:
+        # update stats if needed
+        prov.rating = sp.get('rating', prov.rating)
+        prov.total_jobs = sp.get('total_jobs', prov.total_jobs)
+        prov.verified = sp.get('verified', prov.verified)
+        prov.experience_years = sp.get('experience_years', prov.experience_years)
+        prov.save()
+        print('Updated sample provider', prov.email)
+
+print('Sample providers ready')

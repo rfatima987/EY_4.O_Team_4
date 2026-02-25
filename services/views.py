@@ -8,6 +8,62 @@ from django.http import JsonResponse
 import os
 from django.core.files.storage import default_storage
 from django.db.models import Q
+from django.db.models import Avg
+from .models import Review
+
+@login_required(login_url='login')
+def submit_review(request):
+    """Submit a review tied to a completed booking.
+
+    POST params expected: booking_id, provider_id, rating, comment
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    booking_id = request.POST.get('booking_id')
+    provider_id = request.POST.get('provider_id')
+    rating = request.POST.get('rating')
+    comment = request.POST.get('comment', '').strip()
+
+    # Basic validation
+    try:
+        booking = Booking.objects.select_related('provider', 'customer_user').get(id=int(booking_id))
+    except Exception:
+        return JsonResponse({'error': 'Booking not found'}, status=404)
+
+    if booking.customer_user != request.user:
+        return JsonResponse({'error': 'You are not the owner of this booking'}, status=403)
+
+    if booking.status != 'completed':
+        return JsonResponse({'error': 'Cannot review a booking that is not completed'}, status=400)
+
+    # Prevent duplicate review for same booking
+    if hasattr(booking, 'review'):
+        return JsonResponse({'error': 'A review for this booking already exists'}, status=400)
+
+    try:
+        provider = ServiceProvider.objects.get(id=int(provider_id))
+    except Exception:
+        return JsonResponse({'error': 'Provider not found'}, status=404)
+
+    try:
+        rating_val = int(rating)
+        if rating_val < 1 or rating_val > 5:
+            raise ValueError()
+    except Exception:
+        return JsonResponse({'error': 'Invalid rating value'}, status=400)
+
+    # Create review
+    review = Review.objects.create(
+        booking=booking,
+        provider=provider,
+        user=request.user,
+        rating=rating_val,
+        comment=comment
+    )
+
+    # Provider.rating is maintained in Review.save(); return success
+    return JsonResponse({'success': True, 'new_rating': provider.rating})
 
 # ==================== VALIDATION HELPERS ====================
 
@@ -78,7 +134,13 @@ def add_provider_context(context, user):
 
 def home(request):
     """Home page with hero, services, how it works, and featured providers"""
-    return render(request, 'index.html')
+    # Load featured providers (top-rated). If none verified, fall back to any providers.
+    featured = ServiceProvider.objects.filter(verified=True).order_by('-rating', '-total_jobs')[:6]
+    if not featured.exists():
+        featured = ServiceProvider.objects.all().order_by('-rating', '-total_jobs')[:6]
+
+    context = {'featured_providers': featured}
+    return render(request, 'index.html', add_provider_context(context, request.user))
 
 def login_view(request):
     """User login page"""
@@ -149,7 +211,9 @@ def signup_view(request):
                 email=email,
                 phone=phone,
                 location=city,
-                city=city
+                city=city,
+                profession='General',
+                experience_years=0
             )
         
         # Auto-login the user
@@ -196,6 +260,16 @@ def providers(request):
 
         providers = providers.filter(q)
 
+    # Filter by profession if specified (case-insensitive match across profession/service_type/name/bio)
+    profession_q = (request.GET.get('profession') or '').strip()
+    if profession_q:
+        pq = Q()
+        pq |= Q(profession__icontains=profession_q)
+        pq |= Q(service_type__icontains=profession_q)
+        pq |= Q(name__icontains=profession_q)
+        pq |= Q(bio__icontains=profession_q)
+        providers = providers.filter(pq)
+
     # Filter by location if specified (check multiple location fields)
     location = (request.GET.get('location') or '').strip()
     if location:
@@ -219,6 +293,37 @@ def provider_detail(request, provider_id):
     provider = get_object_or_404(ServiceProvider, id=provider_id)
     return render(request, 'provider_profile.html', {'provider': provider})
 
+
+def provider_reviews_api(request, provider_id):
+    """Return paginated reviews for a provider as JSON.
+
+    Query params: page (1-based), per_page
+    """
+    try:
+        provider = ServiceProvider.objects.get(id=provider_id)
+    except ServiceProvider.DoesNotExist:
+        return JsonResponse({'error': 'Provider not found'}, status=404)
+
+    page = int(request.GET.get('page', 1))
+    per_page = int(request.GET.get('per_page', 10))
+    all_reviews = provider.reviews.order_by('-created_at')
+    total = all_reviews.count()
+    start = (page - 1) * per_page
+    end = start + per_page
+    reviews_qs = all_reviews[start:end]
+
+    reviews = []
+    for r in reviews_qs:
+        reviews.append({
+            'id': r.id,
+            'user': r.user.get_full_name() or r.user.username,
+            'rating': r.rating,
+            'comment': r.comment,
+            'created_at': r.created_at.strftime('%Y-%m-%d')
+        })
+
+    return JsonResponse({'total': total, 'page': page, 'per_page': per_page, 'reviews': reviews})
+
 @login_required(login_url='login')
 def add_provider(request):
     """Form for service providers to register"""
@@ -235,7 +340,7 @@ def add_provider(request):
         email = request.POST.get('email', request.user.email or '').strip()
         phone = request.POST.get('phone', '').strip()
         service_type = request.POST.get('service_type', '')
-        profession = request.POST.get('profession', service_type)
+        profession = request.POST.get('profession', '').strip() or service_type
         experience = request.POST.get('experience', 0)
         bio = request.POST.get('bio', '')
         city = request.POST.get('city', '')
@@ -248,9 +353,9 @@ def add_provider(request):
         cert_file = request.FILES.get('certificate')
 
         # Server-side validation
-        # Basic required fields
-        if not (first_name and last_name and email and phone and service_type and city):
-            messages.error(request, 'Please fill in all required fields.')
+        # Basic required fields (profession required per new rules)
+        if not (first_name and last_name and email and phone and city and profession):
+            messages.error(request, 'Please fill in all required fields and provide your profession.')
             return render(request, 'provider_registration.html', {
                 'first_name': first_name,
                 'last_name': last_name,
@@ -258,6 +363,8 @@ def add_provider(request):
                 'phone': phone,
                 'city': city,
                 'state': state,
+                'profession': profession,
+                'experience': experience,
             })
 
         # Validate certificate file
@@ -271,6 +378,20 @@ def add_provider(request):
         if not aadhar_valid:
             messages.error(request, aadhar_error)
             return render(request, 'provider_registration.html')
+
+        # Validate profession (non-empty)
+        if not profession:
+            messages.error(request, 'Profession cannot be empty.')
+            return render(request, 'provider_registration.html', {'profession': profession, 'experience': experience})
+
+        # Validate experience - must be integer and non-negative
+        try:
+            exp_int = int(experience or 0)
+            if exp_int < 0:
+                raise ValueError()
+        except Exception:
+            messages.error(request, 'Experience must be a valid non-negative integer representing years.')
+            return render(request, 'provider_registration.html', {'profession': profession, 'experience': experience})
 
         # Prevent duplicate provider for same user/email
         existing_by_email = ServiceProvider.objects.filter(email__iexact=email).first()
@@ -289,7 +410,7 @@ def add_provider(request):
             provider.city = city
             provider.state = state
             provider.address = address
-            provider.experience_years = int(experience or 0)
+            provider.experience_years = exp_int
             try:
                 provider.hourly_rate = float(hourly_rate or 0)
                 provider.call_charge = float(call_charge or 0)
@@ -319,7 +440,7 @@ def add_provider(request):
             state=state,
             address=address,
             email=email,
-            experience_years=int(experience or 0),
+            experience_years=exp_int,
             hourly_rate=hourly_rate or 0,
             call_charge=call_charge or 0,
             bio=bio,
@@ -342,6 +463,16 @@ def add_provider(request):
         'email': request.user.email,
         'phone': '',
         'city': '',
+        'service_type': '',
+        'profession': '',
+        'experience': 0,
+        'bio': '',
+        'state': '',
+        'address': '',
+        'hourly_rate': '',
+        'call_charge': '',
+        'availability': 'available',
+        'aadhar': '',
     }
     return render(request, 'provider_registration.html', context)
 
@@ -352,7 +483,8 @@ def user_profile(request):
     context = {
         'user': user,
     }
-    return render(request, 'user_profile.html', context)
+    # Add provider context so provider fields can be shown on the profile
+    return render(request, 'user_profile.html', add_provider_context(context, request.user))
 
 @login_required(login_url='login')
 def user_dashboard(request):
@@ -373,13 +505,29 @@ def user_settings(request):
         user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
         user.save()
+        # Also update provider fields if this user is a provider
+        provider = get_user_provider(request.user)
+        if provider:
+            profession = request.POST.get('profession', '').strip()
+            experience = request.POST.get('experience_years', None)
+            if profession:
+                provider.profession = profession
+            try:
+                if experience is not None and str(experience).strip() != '':
+                    exp_val = int(experience)
+                    if exp_val >= 0:
+                        provider.experience_years = exp_val
+            except Exception:
+                messages.warning(request, 'Experience must be a non-negative integer. Value ignored.')
+            provider.save()
+
         messages.success(request, 'Settings updated successfully!')
         return redirect('settings')
     
     context = {
         'user': user,
     }
-    return render(request, 'user_settings.html', context)
+    return render(request, 'user_settings.html', add_provider_context(context, request.user))
 
 # ==================== BOOKING VIEWS ====================
 
@@ -998,7 +1146,15 @@ def provider_profile(request):
         # Update provider profile
         provider.name = request.POST.get('name', provider.name)
         provider.profession = request.POST.get('profession', provider.profession)
-        provider.experience_years = int(request.POST.get('experience_years', provider.experience_years))
+        # Validate experience_years input
+        try:
+            exp_val = int(request.POST.get('experience_years', provider.experience_years))
+            if exp_val < 0:
+                raise ValueError()
+        except Exception:
+            messages.error(request, 'Experience must be a non-negative integer.')
+            return redirect('provider_profile')
+        provider.experience_years = exp_val
         provider.phone = request.POST.get('phone', provider.phone)
         provider.address = request.POST.get('address', provider.address)
         provider.city = request.POST.get('city', provider.city)

@@ -383,37 +383,59 @@
                 {% else %}
                     {{ provider.name|slice:":1" }}
                 {% endif %}
-            </div>
-
-            <div class="profile-info">
-                <h1>{{ provider.name }}</h1>
-                <div class="profile-category">{{ provider.profession }}</div>
-
-                <div class="profile-rating">
-                    <span class="rating-stars">{% for i in "12345" %}★{% endfor %}</span>
-                    <span style="font-size: 14px;">({{ provider.total_jobs }} verified jobs)</span>
-                </div>
-
-                <div class="profile-stats">
-                    <div class="stat">
-                        <div class="stat-value">{{ provider.rating|default:"0.0" }}</div>
-                        <div class="stat-label">Rating</div>
+                    {% for review in provider.reviews.all %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div>
+                                <div class="review-author">{{ review.user.get_full_name|default:review.user.username }}</div>
+                                <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="review-rating">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+                        </div>
+                        <p class="review-text">{{ review.comment|default:"No comment." }}</p>
                     </div>
-                    <div class="stat">
-                        <div class="stat-value">{{ provider.total_jobs }}</div>
-                        <div class="stat-label">Jobs Done</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">{{ provider.experience_years }}{% if provider.experience_years and provider.experience_years > 0 %}+{% endif %}</div>
-                        <div class="stat-label">Experience (yrs)</div>
-                    </div>
-                </div>
-            </div>
+                    {% empty %}
+                    <p>No reviews yet.</p>
+                    {% endfor %}
 
-            <div class="profile-actions">
-                <div class="book-btn-container">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'booking_form' provider.id %}" class="book-btn-large">
+                        {% comment %} Determine eligible completed bookings for this user and provider {% endcomment %}
+                        {% with eligible_bookings=provider.bookings.filter(customer_user=user,status='completed') %}
+                            {% comment %} Filter out bookings that already have a review in backend - we'll pass only those without review via view where possible; in template we show bookings without review by checking `review` attr existence. {% endcomment %}
+                            {% if eligible_bookings %}
+                                <div style="margin-top:20px;">
+                                    <h3>Leave a review</h3>
+                                    <form id="review-form" method="POST" action="{% url 'submit_review' %}">
+                                        {% csrf_token %}
+                                        <label for="booking_id">Select completed booking</label>
+                                        <select name="booking_id" id="booking_id" class="form-input" required>
+                                            {% for b in eligible_bookings %}
+                                                {% if not b.review %}
+                                                    <option value="{{ b.id }}">Booking #{{ b.id }} — {{ b.booking_date }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+
+                                        <label for="rating" style="display:block; margin-top:8px;">Rating (1-5)</label>
+                                        <select name="rating" id="rating" class="form-input" required>
+                                            <option value="">Choose</option>
+                                            <option value="5">5</option>
+                                            <option value="4">4</option>
+                                            <option value="3">3</option>
+                                            <option value="2">2</option>
+                                            <option value="1">1</option>
+                                        </select>
+
+                                        <label for="comment" style="display:block; margin-top:8px;">Comment</label>
+                                        <textarea name="comment" id="comment" class="form-textarea" placeholder="Share your experience (optional)"></textarea>
+
+                                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                                        <div style="margin-top:12px;"><button type="submit" class="book-btn-large">Submit Review</button></div>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
                             📅 Book This Provider Now
                         </a>
                     {% else %}
@@ -436,15 +458,32 @@
                 <!-- About -->
                 <div class="profile-section">
                     <h2 class="section-title">About</h2>
-                    <p class="about-text">
-                        Professional electrician with 12+ years of experience in residential and commercial electrical services. 
-                        Specializing in installations, repairs, and maintenance. Fully licensed and insured. 
-                        Known for quality workmanship, punctuality, and excellent customer service.
-                    </p>
+                    <p class="about-text">{{ provider.bio|default:'No bio provided yet.' }}</p>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <span class="badge verified">✓ Verified</span>
                         <span class="badge">Licensed</span>
                         <span class="badge">Insured</span>
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="sidebar-card">
+                    <h3>Verification</h3>
+                    <div style="font-size: 13px; line-height: 1.8;">
+                        {% if provider.verified %}✓ Profile Verified<br>{% endif %}
+                        {% if provider.aadhar_number %}✓ ID Uploaded<br>{% endif %}
+                        {% if provider.certificate %}✓ Certificate Uploaded<br>{% endif %}
+                        {% if provider.email %}✓ Email: {{ provider.email }}<br>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="sidebar-card">
+                    <h3>Certifications</h3>
+                    <div style="font-size: 13px; line-height: 1.8;">
+                        {% if provider.certificate %}• Certificate on file<br>{% else %}• No certificate uploaded<br>{% endif %}
+                        • {{ provider.experience_years }} years experience<br>
+                        • Profession: {{ provider.profession|default:'Not specified' }}
                     </div>
                 </div>
 
@@ -486,40 +525,62 @@
 
                 <!-- Reviews -->
                 <div class="profile-section reviews-section">
-                    <h2 class="section-title">Customer Reviews (287)</h2>
-                    
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div>
-                                <div class="review-author">Amit Kumar</div>
-                                <div class="review-date">2 days ago</div>
+                    <h2 class="section-title">Customer Reviews (<span id="review-count">{{ provider.reviews.count }}</span>)</h2>
+
+                    <div id="reviews-list">
+                        {% for review in provider.reviews.all|dictsortreversed:"created_at" %}
+                        <div class="review-card" data-review-id="{{ review.id }}">
+                            <div class="review-header">
+                                <div>
+                                    <div class="review-author">{{ review.user.get_full_name|default:review.user.username }}</div>
+                                    <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                                </div>
+                                <div class="review-rating">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
                             </div>
-                            <div class="review-rating">★★★★★</div>
+                            <p class="review-text">{{ review.comment|default:"No comment." }}</p>
                         </div>
-                        <p class="review-text">Excellent service! Very professional and efficient. Fixed the issue quickly and at reasonable rates. Highly recommended!</p>
+                        {% empty %}
+                        <p id="no-reviews">No reviews yet.</p>
+                        {% endfor %}
                     </div>
 
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div>
-                                <div class="review-author">Priya Singh</div>
-                                <div class="review-date">5 days ago</div>
-                            </div>
-                            <div class="review-rating">★★★★★</div>
-                        </div>
-                        <p class="review-text">Very punctual and thorough. Great customer service. Will call him again for any electrical needs.</p>
-                    </div>
+                    {% if user.is_authenticated %}
+                        {% with eligible_bookings=provider.bookings.filter(customer_user=user,status='completed') %}
+                            {% if eligible_bookings %}
+                                <div style="margin-top:20px;" id="leave-review">
+                                    <h3>Leave a review</h3>
+                                    <form id="review-form" method="POST" action="{% url 'submit_review' %}">
+                                        {% csrf_token %}
+                                        <label for="booking_id">Select completed booking</label>
+                                        <select name="booking_id" id="booking_id" class="form-input" required>
+                                            {% for b in eligible_bookings %}
+                                                {% if not b.review %}
+                                                    <option value="{{ b.id }}">Booking #{{ b.id }} — {{ b.booking_date }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
 
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div>
-                                <div class="review-author">Rajesh Patel</div>
-                                <div class="review-date">1 week ago</div>
-                            </div>
-                            <div class="review-rating">★★★★☆</div>
-                        </div>
-                        <p class="review-text">Good work and fair pricing. Could have communicated a bit better about the timeline.</p>
-                    </div>
+                                        <label for="rating" style="display:block; margin-top:8px;">Rating (1-5)</label>
+                                        <select name="rating" id="rating" class="form-input" required>
+                                            <option value="">Choose</option>
+                                            <option value="5">5</option>
+                                            <option value="4">4</option>
+                                            <option value="3">3</option>
+                                            <option value="2">2</option>
+                                            <option value="1">1</option>
+                                        </select>
+
+                                        <label for="comment" style="display:block; margin-top:8px;">Comment</label>
+                                        <textarea name="comment" id="comment" class="form-textarea" placeholder="Share your experience (optional)"></textarea>
+
+                                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                                        <div style="margin-top:12px;"><button type="submit" class="book-btn-large">Submit Review</button></div>
+                                    </form>
+                                    <div id="review-message" style="margin-top:10px; display:none;"></div>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -527,31 +588,26 @@
             <div>
                 <!-- Quick Info -->
                 <div class="sidebar-card">
-                    <div class="availability-status">✓ Available Today</div>
-                    
+                    <div class="availability-status">{% if provider.availability == 'available' %}✓ Available{% else %}✗ Not Available{% endif %}</div>
+
                     <div class="info-item">
                         <div class="info-label">Location</div>
-                        <div class="info-value">Delhi, India</div>
+                        <div class="info-value">{{ provider.city|default:provider.location|default:'Not specified' }}</div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Service Area</div>
-                        <div class="info-value">Within 20km radius</div>
+                        <div class="info-value">{{ provider.location|default:'Not specified' }}</div>
                     </div>
 
                     <div class="info-item">
-                        <div class="info-label">Response Time</div>
-                        <div class="info-value">Usually within 2 hours</div>
-                    </div>
-
-                    <div class="info-item">
-                        <div class="info-label">Working Hours</div>
-                        <div class="info-value">Mon-Sun, 6:00 AM - 11:00 PM</div>
+                        <div class="info-label">Availability</div>
+                        <div class="info-value">{{ provider.get_availability_display }}</div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Member Since</div>
-                        <div class="info-value">January 2023</div>
+                        <div class="info-value">{{ provider.member_since|date:"M Y" }}</div>
                     </div>
                 </div>
 
@@ -590,6 +646,140 @@
     </div>
 
     {% include 'footer_new.html' %}
+
+    <script>
+        // AJAX submit for review form
+        (function(){
+            const form = document.getElementById('review-form');
+            if (!form) return;
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const msgEl = document.getElementById('review-message');
+                msgEl.style.display = 'none';
+
+                const formData = new FormData(form);
+                const action = form.getAttribute('action');
+
+                try {
+                    const resp = await fetch(action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) throw data;
+
+                    // Success: prepend new review to list
+                    const reviewsList = document.getElementById('reviews-list');
+                    if (reviewsList) {
+                        // remove 'no reviews' placeholder if present
+                        const noRev = document.getElementById('no-reviews');
+                        if (noRev) noRev.remove();
+
+                        const rating = parseInt(formData.get('rating')) || 0;
+                        const comment = formData.get('comment') || '';
+                        const author = '{{ user.get_full_name|default:user.username }}';
+                        const today = new Date().toLocaleDateString();
+
+                        const card = document.createElement('div');
+                        card.className = 'review-card';
+
+                        card.innerHTML = `
+                            <div class="review-header">
+                                <div>
+                                    <div class="review-author">${author}</div>
+                                    <div class="review-date">${today}</div>
+                                </div>
+                                <div class="review-rating">${'★'.repeat(rating)}${'☆'.repeat(5-rating)}</div>
+                            </div>
+                            <p class="review-text">${comment ? comment : 'No comment.'}</p>
+                        `;
+                        reviewsList.insertBefore(card, reviewsList.firstChild);
+                    }
+
+                    // Update review count
+                    const countEl = document.getElementById('review-count');
+                    if (countEl) countEl.textContent = (parseInt(countEl.textContent || '0') + 1).toString();
+
+                    // Remove used booking option
+                    const bookingSelect = document.getElementById('booking_id');
+                    if (bookingSelect) {
+                        const val = formData.get('booking_id');
+                        const opt = bookingSelect.querySelector(`option[value="${val}"]`);
+                        if (opt) opt.remove();
+                        if (bookingSelect.options.length === 0) {
+                            // no more eligible bookings
+                            const leave = document.getElementById('leave-review');
+                            if (leave) leave.remove();
+                        }
+                    }
+
+                    // Show success message
+                    if (msgEl) {
+                        msgEl.style.display = 'block';
+                        msgEl.style.color = 'green';
+                        msgEl.textContent = 'Review submitted — thank you!';
+                    }
+                    form.reset();
+                } catch (err) {
+                    const message = (err && err.error) ? err.error : 'Could not submit your review. Please try again.';
+                    if (msgEl) {
+                        msgEl.style.display = 'block';
+                        msgEl.style.color = 'red';
+                        msgEl.textContent = message;
+                    }
+                }
+            });
+            // Load more reviews (pagination)
+            let reviewPage = 1;
+            const perPage = 5;
+            const loadMoreBtn = document.createElement('button');
+            loadMoreBtn.textContent = 'Load more reviews';
+            loadMoreBtn.className = 'action-btn';
+            loadMoreBtn.style.marginTop = '12px';
+            const reviewsList = document.getElementById('reviews-list');
+            if (reviewsList) {
+                reviewsList.parentNode.appendChild(loadMoreBtn);
+            }
+
+            loadMoreBtn.addEventListener('click', async () => {
+                reviewPage += 1;
+                const providerId = '{{ provider.id }}';
+                const url = `{% url 'provider_reviews_api' provider.id %}?page=${reviewPage}&per_page=${perPage}`;
+                try {
+                    const resp = await fetch(url, {credentials: 'same-origin'});
+                    const data = await resp.json();
+                    if (!resp.ok) throw data;
+                    if (!data.reviews || data.reviews.length === 0) {
+                        loadMoreBtn.textContent = 'No more reviews';
+                        loadMoreBtn.disabled = true;
+                        return;
+                    }
+                    data.reviews.forEach(r => {
+                        const card = document.createElement('div');
+                        card.className = 'review-card';
+                        card.innerHTML = `\
+                            <div class="review-header">\
+                                <div>\
+                                    <div class="review-author">${r.user}</div>\
+                                    <div class="review-date">${r.created_at}</div>\
+                                </div>\
+                                <div class="review-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>\
+                            </div>\
+                            <p class="review-text">${r.comment || 'No comment.'}</p>`;
+                        reviewsList.appendChild(card);
+                    });
+                } catch (err) {
+                    loadMoreBtn.textContent = 'Error loading';
+                    loadMoreBtn.disabled = true;
+                }
+            });
+        })();
+    </script>
 
 </body>
 </html>

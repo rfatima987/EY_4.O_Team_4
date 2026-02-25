@@ -47,6 +47,8 @@ provider_patterns = [
     path('provider/profile/', views.provider_profile, name='provider_profile'),
     path('provider/settings/', views.provider_settings, name='provider_settings'),
     path('provider/register/', views.add_provider, name='add_provider'),
+    path('reviews/submit/', views.submit_review, name='submit_review'),
+    path('provider/<int:provider_id>/reviews/', views.provider_reviews_api, name='provider_reviews_api'),
 ]
 
 # Service & Booking Operations

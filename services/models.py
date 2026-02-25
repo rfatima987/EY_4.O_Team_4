@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
+from django.db.models import Avg
 
 class ServiceProvider(models.Model):
     AVAILABILITY_CHOICES = [
@@ -13,7 +15,7 @@ class ServiceProvider(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(default='')
     phone = models.CharField(max_length=15)
-    profession = models.CharField(max_length=50)
+    profession = models.CharField(max_length=50, default='General', blank=True)
     bio = models.TextField(blank=True, default='')
     avatar_url = models.URLField(blank=True, default='')
     
@@ -25,7 +27,7 @@ class ServiceProvider(models.Model):
     
     # Service Info
     service_type = models.CharField(max_length=50, default='General')
-    experience_years = models.IntegerField(default=0)
+    experience_years = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0)])
     
     # Pricing
     hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
@@ -88,3 +90,27 @@ class Booking(models.Model):
     
     def __str__(self):
         return f"Booking: {self.customer_name} - {self.service} ({self.status})"
+
+
+class Review(models.Model):
+    """Customer review for a booking and provider."""
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='review')
+    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)], help_text='1-5')
+    comment = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review {self.rating} by {self.user} for {self.provider} (Booking #{self.booking.id})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Recalculate provider average rating after a new or updated review
+        avg = Review.objects.filter(provider=self.provider).aggregate(avg=Avg('rating'))['avg'] or 0.0
+        # Store averaged rating on provider (preserves existing field)
+        self.provider.rating = round(float(avg), 2)
+        self.provider.save()

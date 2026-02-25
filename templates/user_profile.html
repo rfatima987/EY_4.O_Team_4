@@ -146,6 +146,18 @@
             <div class="profile-value">{{ user.date_joined|date:"M d, Y" }}</div>
         </div>
 
+        {% if is_provider and provider %}
+        <div class="profile-section">
+            <div class="profile-label">Profession</div>
+            <div class="profile-value">{{ provider.profession|default:"General" }}</div>
+        </div>
+
+        <div class="profile-section">
+            <div class="profile-label">Experience</div>
+            <div class="profile-value">{% if provider.experience_years and provider.experience_years > 0 %}{{ provider.experience_years }} years{% else %}Not specified{% endif %}</div>
+        </div>
+        {% endif %}
+
         <div class="profile-actions">
             <a href="{% url 'settings' %}" class="btn btn-primary">Edit Profile</a>
             <a href="{% url 'home' %}" class="btn btn-outline">Back to Home</a>

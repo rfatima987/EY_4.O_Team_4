@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ServiceProvider, Booking
+from django.utils.html import format_html
+from .models import ServiceProvider, Booking, Review
 
 class ServiceProviderAdmin(admin.ModelAdmin):
     list_display = [
@@ -132,3 +133,23 @@ class BookingAdmin(admin.ModelAdmin):
 
 admin.site.register(ServiceProvider, ServiceProviderAdmin)
 admin.site.register(Booking, BookingAdmin)
+ 
+
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('id', 'provider', 'user', 'rating', 'short_comment', 'created_at')
+    list_filter = ('rating', 'created_at', 'provider')
+    search_fields = ('user__username', 'user__email', 'comment', 'provider__name')
+    readonly_fields = ('created_at',)
+    actions = ['delete_selected_reviews']
+
+    def short_comment(self, obj):
+        return (obj.comment[:60] + '...') if obj.comment and len(obj.comment) > 60 else (obj.comment or '')
+    short_comment.short_description = 'Comment'
+
+    @admin.action(description='Delete selected reviews')
+    def delete_selected_reviews(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f'{count} review(s) deleted.')
+
+admin.site.register(Review, ReviewAdmin)

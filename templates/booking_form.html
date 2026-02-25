@@ -255,11 +255,11 @@
                 <div class="provider-meta">
                     <div class="meta-item">
                         <div class="meta-label">Service</div>
-                        {{ provider.profession }}
+                        {{ provider.profession|default:"General" }}
                     </div>
                     <div class="meta-item">
                         <div class="meta-label">Experience</div>
-                        {{ provider.experience_years }} years
+                        {% if provider.experience_years and provider.experience_years > 0 %}{{ provider.experience_years }} years{% else %}Not specified{% endif %}
                     </div>
                     <div class="meta-item">
                         <div class="meta-label">Location</div>

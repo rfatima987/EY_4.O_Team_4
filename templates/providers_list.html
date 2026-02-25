@@ -15,9 +15,11 @@
 
     <style>
         .providers-page {
-            max-width: 1400px;
+            max-width: 100%;
+            width: 100%;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 40px 60px;
+            box-sizing: border-box;
         }
 
         .providers-header {
@@ -93,8 +95,9 @@
 
         .providers-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px;
+            align-items: start;
         }
 
         .provider-card-large {
@@ -283,45 +286,7 @@
             <p>Find verified and trusted service providers in your area</p>
         </div>
 
-        <!-- Filters -->
-        <div class="filters-section">
-            <form method="GET">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label for="service">Service Type</label>
-                        <select id="service" name="service">
-                            <option value="">All Services</option>
-                            <option value="electrical">Electrical</option>
-                            <option value="plumbing">Plumbing</option>
-                            <option value="cleaning">Cleaning</option>
-                            <option value="ac">AC Repair</option>
-                            <option value="mechanic">Car Repair</option>
-                            <option value="general">General Services</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="location">Location</label>
-                        <input type="text" id="location" name="location" placeholder="Enter your city or area">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="rating">Minimum Rating</label>
-                        <select id="rating" name="rating">
-                            <option value="">All Ratings</option>
-                            <option value="4.5">4.5+ Stars</option>
-                            <option value="4">4+ Stars</option>
-                            <option value="3.5">3.5+ Stars</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filter-buttons">
-                    <button type="submit" class="btn btn-primary">🔍 Search</button>
-                    <button type="reset" class="btn btn-outline">Clear Filters</button>
-                </div>
-            </form>
-        </div>
+        <!-- Filters removed per request -->
 
         <!-- Providers Grid -->
         <div class="providers-list">
@@ -330,7 +295,10 @@
                 <div class="provider-header">
                     <div class="provider-avatar">{% if provider.avatar_url %}<img src="{{ provider.avatar_url }}" alt="{{ provider.name }}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;" />{% else %}⚡{% endif %}</div>
                     <div class="provider-name-large">{{ provider.name }}</div>
-                    <div class="provider-category">{{ provider.profession }}</div>
+                    <div class="provider-category">{{ provider.profession|default:"General" }}</div>
+                </div>
+                <div style="padding: 0 20px 20px 20px;">
+                    <div style="font-size:13px;color:var(--text-light);">Experience: {{ provider.experience_years|default:0 }} years</div>
                 </div>
                 <div class="provider-body">
                     <div class="provider-stats">
