@@ -18,7 +18,9 @@
                 <li class="nav-item"><a href="{% url 'providers' %}" class="nav-link">Find Services</a></li>
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a href="{% url 'my_bookings' %}" class="nav-link">My Bookings</a></li>
-                    <li class="nav-item"><a href="{% url 'provider_dashboard' %}" class="nav-link">Provider Dashboard</a></li>
+                    {% if user.serviceprovider %}
+                        <li class="nav-item"><a href="{% url 'provider_dashboard' %}" class="nav-link">Provider Dashboard</a></li>
+                    {% endif %}
                 {% endif %}
                 <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
                 <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>

@@ -7,6 +7,7 @@ from .models import ServiceProvider, Booking
 from django.http import JsonResponse
 import os
 from django.core.files.storage import default_storage
+from django.db.models import Q
 
 # ==================== VALIDATION HELPERS ====================
 
@@ -170,22 +171,46 @@ def logout_view(request):
 def providers(request):
     """List all service providers with filtering"""
     providers = ServiceProvider.objects.all()
-    
-    # Filter by service type if specified
-    service_type = request.GET.get('service')
+
+    # Filter by service type if specified (support flexible matching)
+    service_type = (request.GET.get('service') or '').strip()
     if service_type:
-        providers = providers.filter(profession__icontains=service_type)
-    
-    # Filter by location if specified
-    location = request.GET.get('location')
+        term = service_type.lower()
+        # Build simple variants to match common suffix differences (electrical vs electrician, etc.)
+        variants = {term}
+        if term.endswith('ical'):
+            variants.add(term.replace('ical', 'ician'))
+        if term.endswith('ician'):
+            variants.add(term.replace('ician', 'ical'))
+        # Also add a short root to help partial matches
+        root = ''.join(ch for ch in term if ch.isalpha())
+        if len(root) > 3:
+            variants.add(root[:5])
+
+        q = Q()
+        for v in variants:
+            q |= Q(profession__icontains=v)
+            q |= Q(service_type__icontains=v)
+            q |= Q(name__icontains=v)
+            q |= Q(bio__icontains=v)
+
+        providers = providers.filter(q)
+
+    # Filter by location if specified (check multiple location fields)
+    location = (request.GET.get('location') or '').strip()
     if location:
-        providers = providers.filter(location__icontains=location)
-    
+        providers = providers.filter(
+            Q(location__icontains=location) | Q(city__icontains=location) | Q(state__icontains=location)
+        )
+
     # Filter by rating if specified
     rating = request.GET.get('rating')
     if rating:
-        providers = providers.filter(rating__gte=float(rating))
-    
+        try:
+            providers = providers.filter(rating__gte=float(rating))
+        except (ValueError, TypeError):
+            pass
+
     context = {'providers': providers}
     return render(request, 'providers_list.html', context)
 
