@@ -12,7 +12,7 @@
         <!-- Main Navigation -->
         <ul class="navbar-menu">
             {% if user.is_authenticated %}
-                {% if user.serviceprovider %}
+                {% if user.serviceprovider and not force_customer_nav %}
                     <!-- Provider Navigation -->
                     <li class="nav-item">
                         <a href="{% url 'provider_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'provider_dashboard' %}active{% endif %}">

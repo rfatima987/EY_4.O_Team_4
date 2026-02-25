@@ -16,7 +16,6 @@
             <ul class="nav-list">
                 <li class="nav-item"><a href="{% url 'home' %}" class="nav-link">Home</a></li>
                 <li class="nav-item"><a href="{% url 'providers' %}" class="nav-link">Find Services</a></li>
-                <li class="nav-item"><a href="{% url 'add_provider' %}" class="nav-link">Become a Provider</a></li>
                 {% if user.is_authenticated %}
                     <li class="nav-item"><a href="{% url 'my_bookings' %}" class="nav-link">My Bookings</a></li>
                     <li class="nav-item"><a href="{% url 'provider_dashboard' %}" class="nav-link">Provider Dashboard</a></li>

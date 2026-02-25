@@ -40,6 +40,9 @@ class ServiceProvider(models.Model):
     # Metadata
     member_since = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
+    # Verification / Documents
+    aadhar_number = models.CharField(max_length=64, blank=True, default='')
+    certificate = models.FileField(upload_to='certificates/', blank=True, null=True)
     
     class Meta:
         ordering = ['-rating', '-total_jobs']

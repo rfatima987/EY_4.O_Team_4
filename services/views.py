@@ -5,6 +5,49 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import ServiceProvider, Booking
 from django.http import JsonResponse
+import os
+from django.core.files.storage import default_storage
+
+# ==================== VALIDATION HELPERS ====================
+
+def validate_certificate_file(file_obj):
+    """Validate uploaded certificate file. Returns (is_valid, error_msg)."""
+    if not file_obj:
+        return True, None  # Optional file
+    
+    ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+    MAX_SIZE = 5 * 1024 * 1024  # 5MB
+    
+    if file_obj.content_type not in ALLOWED_TYPES:
+        return False, 'Certificate must be PDF, JPG or PNG format'
+    
+    if file_obj.size > MAX_SIZE:
+        return False, f'Certificate file must be ≤ 5MB (yours is {file_obj.size / 1024 / 1024:.1f}MB)'
+    
+    return True, None
+
+def validate_aadhar(aadhar_str):
+    """Validate Aadhar/ID number. Returns (is_valid, error_msg)."""
+    if not aadhar_str:
+        return True, None  # Optional field
+    
+    cleaned = ''.join(c for c in str(aadhar_str) if c.isalnum())
+    if len(cleaned) < 6:
+        return False, 'Aadhar/ID must be at least 6 characters'
+    
+    if len(cleaned) > 64:
+        return False, 'Aadhar/ID is too long'
+    
+    return True, None
+
+def delete_old_certificate(provider):
+    """Safely delete old certificate file if it exists."""
+    if provider.certificate:
+        try:
+            if default_storage.exists(provider.certificate.name):
+                default_storage.delete(provider.certificate.name)
+        except Exception:
+            pass  # Silently fail if deletion doesn't work
 
 # Helper function to check if user is a provider
 def get_user_provider(user):
@@ -154,20 +197,128 @@ def provider_detail(request, provider_id):
 @login_required(login_url='login')
 def add_provider(request):
     """Form for service providers to register"""
+    # If user already has a provider profile, redirect them
+    existing = ServiceProvider.objects.filter(user=request.user).first()
+    if existing:
+        messages.info(request, 'You already have a provider profile.')
+        return redirect('provider_dashboard')
+
     if request.method == "POST":
-        ServiceProvider.objects.create(
-            name=request.POST.get('first_name', '') + ' ' + request.POST.get('last_name', ''),
-            profession=request.POST.get('service_type', ''),
-            phone=request.POST.get('phone', ''),
-            location=request.POST.get('city', ''),
-            email=request.POST.get('email', ''),
-            experience_years=int(request.POST.get('experience_years', 0)),
-            hourly_rate=float(request.POST.get('hourly_rate', 0)),
-            bio=request.POST.get('bio', '')
+        # Collect fields from form
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', request.user.email or '').strip()
+        phone = request.POST.get('phone', '').strip()
+        service_type = request.POST.get('service_type', '')
+        profession = request.POST.get('profession', service_type)
+        experience = request.POST.get('experience', 0)
+        bio = request.POST.get('bio', '')
+        city = request.POST.get('city', '')
+        state = request.POST.get('state', '')
+        address = request.POST.get('address', '')
+        hourly_rate = request.POST.get('hourly_rate', 0)
+        call_charge = request.POST.get('call_charge', 0)
+        availability = request.POST.get('availability', 'available')
+        aadhar = request.POST.get('aadhar', '').strip()
+        cert_file = request.FILES.get('certificate')
+
+        # Server-side validation
+        # Basic required fields
+        if not (first_name and last_name and email and phone and service_type and city):
+            messages.error(request, 'Please fill in all required fields.')
+            return render(request, 'provider_registration.html', {
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'phone': phone,
+                'city': city,
+                'state': state,
+            })
+
+        # Validate certificate file
+        cert_valid, cert_error = validate_certificate_file(cert_file)
+        if not cert_valid:
+            messages.error(request, cert_error)
+            return render(request, 'provider_registration.html')
+
+        # Validate aadhar
+        aadhar_valid, aadhar_error = validate_aadhar(aadhar)
+        if not aadhar_valid:
+            messages.error(request, aadhar_error)
+            return render(request, 'provider_registration.html')
+
+        # Prevent duplicate provider for same user/email
+        existing_by_email = ServiceProvider.objects.filter(email__iexact=email).first()
+        if existing_by_email and existing_by_email.user and existing_by_email.user != request.user:
+            messages.error(request, 'A provider account already exists with this email.')
+            return render(request, 'provider_registration.html')
+
+        # If a provider exists with this email but not linked to a user, link it
+        if existing_by_email and not existing_by_email.user:
+            provider = existing_by_email
+            provider.user = request.user
+            provider.name = f"{first_name} {last_name}"
+            provider.profession = profession
+            provider.phone = phone
+            provider.location = city
+            provider.city = city
+            provider.state = state
+            provider.address = address
+            provider.experience_years = int(experience or 0)
+            try:
+                provider.hourly_rate = float(hourly_rate or 0)
+                provider.call_charge = float(call_charge or 0)
+            except Exception:
+                pass
+            provider.bio = bio
+            provider.availability = availability or provider.availability
+            provider.aadhar_number = aadhar
+            
+            # Handle certificate: delete old, add new
+            if cert_file:
+                delete_old_certificate(provider)
+                provider.certificate = cert_file
+            
+            provider.save()
+            messages.success(request, 'Provider profile linked to your account successfully!')
+            return redirect('provider_dashboard')
+
+        # Create new provider and link to current user
+        provider = ServiceProvider.objects.create(
+            user=request.user,
+            name=f"{first_name} {last_name}",
+            profession=profession,
+            phone=phone,
+            location=city,
+            city=city,
+            state=state,
+            address=address,
+            email=email,
+            experience_years=int(experience or 0),
+            hourly_rate=hourly_rate or 0,
+            call_charge=call_charge or 0,
+            bio=bio,
+            availability=('available' if availability in ['24/7','available','weekdays','weekends','custom'] else 'available'),
+            aadhar_number=aadhar
         )
-        messages.success(request, 'Provider profile created successfully!')
-        return redirect('providers')
-    return render(request, 'provider_registration.html')
+        
+        # Attach certificate if provided
+        if cert_file:
+            provider.certificate = cert_file
+            provider.save()
+
+        messages.success(request, 'Provider profile created and linked to your account successfully!')
+        return redirect('provider_dashboard')
+
+    # GET - render form prefilled with user info where available
+    context = {
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'email': request.user.email,
+        'phone': '',
+        'city': '',
+    }
+    return render(request, 'provider_registration.html', context)
 
 @login_required(login_url='login')
 def user_profile(request):
@@ -259,6 +410,7 @@ def my_bookings(request):
     context = {
         'bookings': bookings,
         'user': request.user,
+        'force_customer_nav': True,  # Force customer navigation, hide provider nav
     }
     return render(request, 'my_bookings.html', context)
 
@@ -282,12 +434,24 @@ def provider_dashboard(request):
             messages.error(request, 'You are not registered as a service provider. Please register first.')
             return redirect('add_provider')
     
+    # Filter bookings based on status filter if provided
+    status_filter = request.GET.get('status', '')
     bookings = Booking.objects.filter(provider=provider).order_by('-created_at')
     
+    if status_filter and status_filter in ['pending', 'approved', 'rejected', 'completed', 'cancelled']:
+        bookings = bookings.filter(status=status_filter)
+    
     # Statistics
-    pending_count = bookings.filter(status='pending').count()
-    approved_count = bookings.filter(status='approved').count()
-    rejected_count = bookings.filter(status='rejected').count()
+    all_bookings = Booking.objects.filter(provider=provider)
+    pending_count = all_bookings.filter(status='pending').count()
+    approved_count = all_bookings.filter(status='approved').count()
+    rejected_count = all_bookings.filter(status='rejected').count()
+    completed_count = all_bookings.filter(status='completed').count()
+    cancelled_count = all_bookings.filter(status='cancelled').count()
+    
+    # Calculate completion rate
+    total_bookings = all_bookings.count()
+    completion_rate = (completed_count / total_bookings * 100) if total_bookings > 0 else 0
     
     context = {
         'provider': provider,
@@ -295,6 +459,11 @@ def provider_dashboard(request):
         'pending_count': pending_count,
         'approved_count': approved_count,
         'rejected_count': rejected_count,
+        'completed_count': completed_count,
+        'cancelled_count': cancelled_count,
+        'total_bookings': total_bookings,
+        'completion_rate': round(completion_rate, 1),
+        'status_filter': status_filter,
     }
     return render(request, 'provider_dashboard.html', context)
 
@@ -355,6 +524,219 @@ def bookings_status(request):
     return JsonResponse({'bookings': data})
 
 
+@login_required(login_url='login')
+def cancel_booking(request, booking_id):
+    """Cancel a booking (customer can only cancel pending bookings)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+    
+    booking = get_object_or_404(Booking, id=booking_id)
+    
+    # Check if user is the customer
+    if booking.customer_user != request.user:
+        messages.error(request, 'You do not have permission to cancel this booking.')
+        return redirect('my_bookings')
+    
+    # Can only cancel pending or approved bookings
+    if booking.status not in ['pending', 'approved']:
+        messages.error(request, f'Cannot cancel a {booking.status} booking.')
+        return redirect('my_bookings')
+    
+    booking.status = 'cancelled'
+    booking.save()
+    
+    messages.success(request, f'Booking #{booking.id} has been cancelled successfully.')
+    return redirect('my_bookings')
+
+
+@login_required(login_url='login')
+def get_bookings_api(request):
+    """Advanced bookings API with filtering and pagination"""
+    user = request.user
+    
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    provider_id = request.GET.get('provider', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    sort_by = request.GET.get('sort', '-created_at')
+    page = int(request.GET.get('page', 1))
+    per_page = int(request.GET.get('per_page', 10))
+    
+    # Base query for customer bookings
+    bookings = Booking.objects.filter(customer_user=user)
+    
+    # Apply filters
+    if status_filter and status_filter in ['pending', 'approved', 'rejected', 'completed', 'cancelled']:
+        bookings = bookings.filter(status=status_filter)
+    
+    if provider_id:
+        try:
+            bookings = bookings.filter(provider_id=int(provider_id))
+        except (ValueError, TypeError):
+            pass
+    
+    if date_from:
+        try:
+            from datetime import datetime
+            df = datetime.strptime(date_from, '%Y-%m-%d').date()
+            bookings = bookings.filter(booking_date__gte=df)
+        except (ValueError, TypeError):
+            pass
+    
+    if date_to:
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_to, '%Y-%m-%d').date()
+            bookings = bookings.filter(booking_date__lte=dt)
+        except (ValueError, TypeError):
+            pass
+    
+    # Sort
+    if sort_by in ['-created_at', 'created_at', '-booking_date', 'booking_date', '-updated_at', 'updated_at']:
+        bookings = bookings.order_by(sort_by)
+    
+    # Pagination
+    total_count = bookings.count()
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_bookings = bookings[start:end]
+    
+    # Build response
+    data = {
+        'total': total_count,
+        'page': page,
+        'per_page': per_page,
+        'total_pages': (total_count + per_page - 1) // per_page,
+        'bookings': [
+            {
+                'id': b.id,
+                'provider_name': b.provider.name,
+                'provider_id': b.provider.id,
+                'service': b.service,
+                'date': str(b.booking_date),
+                'time': str(b.booking_time),
+                'status': b.status,
+                'created_at': b.created_at.isoformat(),
+                'updated_at': b.updated_at.isoformat(),
+            }
+            for b in paginated_bookings
+        ]
+    }
+    
+    return JsonResponse(data)
+
+
+@login_required(login_url='login')
+def get_provider_bookings_api(request):
+    """API endpoint for provider to get their bookings with analytics"""
+    # Get provider
+    try:
+        provider = ServiceProvider.objects.get(user=request.user)
+    except ServiceProvider.DoesNotExist:
+        if request.user.email:
+            matches = ServiceProvider.objects.filter(email__iexact=request.user.email)
+            if matches.exists():
+                provider = matches.first()
+                provider.user = request.user
+                provider.save()
+            else:
+                return JsonResponse({'error': 'Not a service provider'}, status=403)
+        else:
+            return JsonResponse({'error': 'Not a service provider'}, status=403)
+    
+    # Get filter parameters
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    page = int(request.GET.get('page', 1))
+    per_page = int(request.GET.get('per_page', 10))
+    
+    # Get bookings
+    bookings = Booking.objects.filter(provider=provider)
+    
+    # Apply filters
+    if status_filter and status_filter in ['pending', 'approved', 'rejected', 'completed', 'cancelled']:
+        bookings = bookings.filter(status=status_filter)
+    
+    if date_from:
+        try:
+            from datetime import datetime
+            df = datetime.strptime(date_from, '%Y-%m-%d').date()
+            bookings = bookings.filter(booking_date__gte=df)
+        except (ValueError, TypeError):
+            pass
+    
+    if date_to:
+        try:
+            from datetime import datetime
+            dt = datetime.strptime(date_to, '%Y-%m-%d').date()
+            bookings = bookings.filter(booking_date__lte=dt)
+        except (ValueError, TypeError):
+            pass
+    
+    bookings = bookings.order_by('-created_at')
+    
+    # Calculate statistics
+    all_bookings = Booking.objects.filter(provider=provider)
+    total = all_bookings.count()
+    pending = all_bookings.filter(status='pending').count()
+    approved = all_bookings.filter(status='approved').count()
+    completed = all_bookings.filter(status='completed').count()
+    rejected = all_bookings.filter(status='rejected').count()
+    cancelled = all_bookings.filter(status='cancelled').count()
+    completion_rate = (completed / total * 100) if total > 0 else 0
+    
+    # Pagination
+    total_count = bookings.count()
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_bookings = bookings[start:end]
+    
+    # Build response
+    data = {
+        'provider': {
+            'id': provider.id,
+            'name': provider.name,
+            'profession': provider.profession,
+            'rating': float(provider.rating),
+        },
+        'stats': {
+            'total': total,
+            'pending': pending,
+            'approved': approved,
+            'completed': completed,
+            'rejected': rejected,
+            'cancelled': cancelled,
+            'completion_rate': round(completion_rate, 1),
+        },
+        'pagination': {
+            'page': page,
+            'per_page': per_page,
+            'total': total_count,
+            'total_pages': (total_count + per_page - 1) // per_page,
+        },
+        'bookings': [
+            {
+                'id': b.id,
+                'customer_name': b.customer_name,
+                'customer_phone': b.customer_phone,
+                'service': b.service,
+                'date': str(b.booking_date),
+                'time': str(b.booking_time),
+                'address': b.customer_address,
+                'notes': b.notes,
+                'status': b.status,
+                'created_at': b.created_at.isoformat(),
+                'updated_at': b.updated_at.isoformat(),
+            }
+            for b in paginated_bookings
+        ]
+    }
+    
+    return JsonResponse(data)
+
+
 # ==================== ROLE-BASED DASHBOARD ROUTING ====================
 
 @login_required(login_url='login')
@@ -381,16 +763,30 @@ def customer_dashboard(request):
     """Customer dashboard - overview of recent bookings and quick actions"""
     user = request.user
     recent_bookings = Booking.objects.filter(customer_user=user).order_by('-created_at')[:5]
-    total_bookings = Booking.objects.filter(customer_user=user).count()
-    completed_bookings = Booking.objects.filter(customer_user=user, status='completed').count()
-    pending_bookings = Booking.objects.filter(customer_user=user, status='pending').count()
+    
+    # Get comprehensive statistics
+    all_bookings = Booking.objects.filter(customer_user=user)
+    total_bookings = all_bookings.count()
+    completed_bookings = all_bookings.filter(status='completed').count()
+    pending_bookings = all_bookings.filter(status='pending').count()
+    approved_bookings = all_bookings.filter(status='approved').count()
+    rejected_bookings = all_bookings.filter(status='rejected').count()
+    cancelled_bookings = all_bookings.filter(status='cancelled').count()
+    
+    # Calculate success rate
+    success_rate = (completed_bookings / total_bookings * 100) if total_bookings > 0 else 0
     
     context = {
         'user': user,
         'recent_bookings': recent_bookings,
         'total_bookings': total_bookings,
         'completed_bookings': completed_bookings,
+        'approved_bookings': approved_bookings,
         'pending_bookings': pending_bookings,
+        'rejected_bookings': rejected_bookings,
+        'cancelled_bookings': cancelled_bookings,
+        'success_rate': round(success_rate, 1),
+        'force_customer_nav': True,  # Force customer navigation, hide provider nav
     }
     return render(request, 'customer_dashboard.html', context)
 
@@ -437,6 +833,7 @@ def find_services(request):
         'search_query': search_query,
         'selected_profession': profession,
         'selected_location': location,
+        'force_customer_nav': True,  # Force customer navigation, hide provider nav
     }
     return render(request, 'find_services.html', add_provider_context(context, request.user))
 
@@ -462,6 +859,7 @@ def customer_profile(request):
         'user': user,
         'total_bookings': total_bookings,
         'completed_bookings': completed_bookings,
+        'force_customer_nav': True,  # Force customer navigation, hide provider nav
     }
     return render(request, 'customer_profile.html', context)
 
@@ -496,7 +894,10 @@ def customer_settings(request):
             messages.success(request, 'Settings updated successfully!')
         return redirect('customer_settings')
     
-    context = {'user': user}
+    context = {
+        'user': user,
+        'force_customer_nav': True,  # Force customer navigation, hide provider nav
+    }
     return render(request, 'customer_settings.html', context)
 
 

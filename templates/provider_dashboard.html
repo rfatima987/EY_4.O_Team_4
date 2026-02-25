@@ -299,6 +299,11 @@
                 <p class="stat-label">Approved</p>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">🏁</div>
+                <h3 class="stat-value">{{ completed_count }}</h3>
+                <p class="stat-label">Completed</p>
+            </div>
+            <div class="stat-card">
                 <div class="stat-icon">❌</div>
                 <h3 class="stat-value">{{ rejected_count }}</h3>
                 <p class="stat-label">Rejected</p>
@@ -307,6 +312,23 @@
                 <div class="stat-icon">⭐</div>
                 <h3 class="stat-value">{{ provider.rating }}</h3>
                 <p class="stat-label">Your Rating</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <h3 class="stat-value">{{ completion_rate }}%</h3>
+                <p class="stat-label">Completion Rate</p>
+            </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div style="margin-bottom: 30px; padding: 20px; background: white; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 15px; color: var(--text-dark);">Filter Bookings</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{% url 'provider_dashboard' %}" class="btn {% if not status_filter %}btn-approve{% else %}btn-outline{% endif %}" style="padding: 8px 16px; font-size: 12px;">All ({{ total_bookings }})</a>
+                <a href="?status=pending" class="btn {% if status_filter == 'pending' %}btn-approve{% else %}btn-outline{% endif %}" style="padding: 8px 16px; font-size: 12px;">Pending ({{ pending_count }})</a>
+                <a href="?status=approved" class="btn {% if status_filter == 'approved' %}btn-approve{% else %}btn-outline{% endif %}" style="padding: 8px 16px; font-size: 12px;">Approved ({{ approved_count }})</a>
+                <a href="?status=completed" class="btn {% if status_filter == 'completed' %}btn-approve{% else %}btn-outline{% endif %}" style="padding: 8px 16px; font-size: 12px;">Completed ({{ completed_count }})</a>
+                <a href="?status=rejected" class="btn {% if status_filter == 'rejected' %}btn-approve{% else %}btn-outline{% endif %}" style="padding: 8px 16px; font-size: 12px;">Rejected ({{ rejected_count }})</a>
             </div>
         </div>
 

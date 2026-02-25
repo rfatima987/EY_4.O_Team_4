@@ -73,6 +73,35 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .validation-alert {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .validation-alert.show {
+            display: block;
+        }
+
+        .validation-alert.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left-color: rgb(239, 68, 68);
+            color: rgb(185, 28, 28);
+        }
+
+        .validation-alert.success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-left-color: rgb(34, 197, 94);
+            color: rgb(22, 121, 52);
+        }
+
+        .validation-alert-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .form-section {
             margin-bottom: 30px;
         }
@@ -133,6 +162,13 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
+        .form-group input.error,
+        .form-group textarea.error,
+        .form-group select.error {
+            border-color: rgb(239, 68, 68);
+            background-color: rgba(239, 68, 68, 0.02);
+        }
+
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
@@ -171,6 +207,7 @@
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
         }
 
         .file-upload:hover {
@@ -181,6 +218,11 @@
         .file-upload.drag-over {
             border-color: var(--primary);
             background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .file-upload.has-file {
+            border-color: rgb(34, 197, 94);
+            background-color: rgba(34, 197, 94, 0.02);
         }
 
         .file-upload-icon {
@@ -197,6 +239,25 @@
         .file-upload-subtext {
             font-size: 12px;
             color: var(--text-light);
+        }
+
+        .file-preview {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: rgba(34, 197, 94, 0.1);
+            border-radius: 6px;
+            color: rgb(22, 121, 52);
+            font-size: 13px;
+            display: none;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-preview-name {
+            word-break: break-all;
+            font-weight: 500;
         }
 
         .form-buttons {
@@ -284,8 +345,13 @@
             </div>
         </div>
 
-        <form class="registration-form" method="POST">
+        <form class="registration-form" method="POST" enctype="multipart/form-data" id="provider-form">
             {% csrf_token %}
+
+            <!-- Validation Alert -->
+            <div class="validation-alert error" id="validation-alert">
+                <div class="validation-alert-text" id="alert-text"></div>
+            </div>
 
             <!-- Personal Information -->
             <div class="form-section">
@@ -294,22 +360,22 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="first-name" class="required">First Name</label>
-                        <input type="text" id="first-name" name="first_name" required>
+                        <input type="text" id="first-name" name="first_name" value="{{ first_name|default:'' }}" required>
                     </div>
                     <div class="form-group">
                         <label for="last-name" class="required">Last Name</label>
-                        <input type="text" id="last-name" name="last_name" required>
+                        <input type="text" id="last-name" name="last_name" value="{{ last_name|default:'' }}" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="email" class="required">Email Address</label>
-                        <input type="email" id="email" name="email" required>
+                        <input type="email" id="email" name="email" value="{{ email|default:'' }}" required>
                     </div>
                     <div class="form-group">
                         <label for="phone" class="required">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+91" required>
+                        <input type="tel" id="phone" name="phone" placeholder="+91" value="{{ phone|default:'' }}" required>
                     </div>
                 </div>
             </div>
@@ -336,13 +402,13 @@
                     </div>
                     <div class="form-group">
                         <label for="experience" class="required">Years of Experience</label>
-                        <input type="number" id="experience" name="experience" min="0" max="70" required>
+                        <input type="number" id="experience" name="experience" min="0" max="70" value="{{ experience|default:'0' }}" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="bio" class="required">Professional Bio</label>
-                    <textarea id="bio" name="bio" placeholder="Tell customers about your expertise and experience..." required></textarea>
+                    <textarea id="bio" name="bio" placeholder="Tell customers about your expertise and experience..." required>{{ bio|default:'' }}</textarea>
                 </div>
 
                 <div class="form-group">
@@ -375,17 +441,17 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="city" class="required">City</label>
-                        <input type="text" id="city" name="city" required>
+                        <input type="text" id="city" name="city" value="{{ city|default:'' }}" required>
                     </div>
                     <div class="form-group">
                         <label for="state" class="required">State</label>
-                        <input type="text" id="state" name="state" required>
+                        <input type="text" id="state" name="state" value="{{ state|default:'' }}" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="address">Street Address</label>
-                    <input type="text" id="address" name="address" placeholder="(Optional)">
+                    <input type="text" id="address" name="address" placeholder="(Optional)" value="{{ address|default:'' }}">
                 </div>
             </div>
 
@@ -396,11 +462,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="hourly-rate">Hourly Rate (₹)</label>
-                        <input type="number" id="hourly-rate" name="hourly_rate" min="0" step="100">
+                        <input type="number" id="hourly-rate" name="hourly_rate" min="0" step="100" value="{{ hourly_rate|default:'' }}">
                     </div>
                     <div class="form-group">
                         <label for="call-charge">Call Booking Charge (₹)</label>
-                        <input type="number" id="call-charge" name="call_charge" min="0" step="20">
+                        <input type="number" id="call-charge" name="call_charge" min="0" step="20" value="{{ call_charge|default:'' }}">
                     </div>
                 </div>
 
@@ -422,7 +488,7 @@
 
                 <div class="form-group">
                     <label for="aadhar" class="required">Aadhar/ID Number</label>
-                    <input type="text" id="aadhar" name="aadhar" placeholder="Your government ID number" required>
+                    <input type="text" id="aadhar" name="aadhar" placeholder="Your government ID number" value="{{ aadhar|default:'' }}" required>
                 </div>
 
                 <div class="form-group">
@@ -432,6 +498,9 @@
                         <div class="file-upload-text">Click to upload or drag and drop</div>
                         <div class="file-upload-subtext">PDF, JPG, or PNG (Max 5MB)</div>
                         <input type="file" id="certificate" name="certificate" accept=".pdf,.jpg,.png" style="display: none;">
+                    </div>
+                    <div class="file-preview">
+                        <span class="file-preview-name"></span>
                     </div>
                 </div>
             </div>
@@ -468,10 +537,99 @@
     {% include 'footer_new.html' %}
 
     <script>
-        // File upload drag and drop
+        const form = document.getElementById('provider-form');
+        const alertBox = document.getElementById('validation-alert');
+        const alertText = document.getElementById('alert-text');
         const fileUpload = document.querySelector('.file-upload');
         const fileInput = document.getElementById('certificate');
 
+        // Show validation alert
+        function showAlert(message, type = 'error') {
+            alertBox.classList.remove('error', 'success');
+            alertBox.classList.add(type);
+            alertText.textContent = message;
+            alertBox.classList.add('show');
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertBox.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        // Hide validation alert
+        function hideAlert() {
+            alertBox.classList.remove('show');
+        }
+
+        // Handle form submission with validation
+        form.addEventListener('submit', (e) => {
+            hideAlert();
+            
+            const firstName = document.getElementById('first-name').value.trim();
+            const lastName = document.getElementById('last-name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const serviceType = document.getElementById('service-type').value;
+            const aadhar = document.getElementById('aadhar').value.trim();
+
+            // Check required fields
+            if (!firstName || !lastName || !email || !phone || !city || !state || !serviceType) {
+                e.preventDefault();
+                showAlert('Please fill all required fields (marked with *)');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                showAlert('Please enter a valid email address');
+                return;
+            }
+
+            // Phone validation (basic)
+            if (phone.length < 10) {
+                e.preventDefault();
+                showAlert('Please enter a valid phone number');
+                return;
+            }
+
+            // Aadhar validation (if provided)
+            if (aadhar) {
+                const cleaned = aadhar.replace(/\D/g, '');
+                if (cleaned.length < 6) {
+                    e.preventDefault();
+                    showAlert('Aadhar/ID must be at least 6 characters');
+                    return;
+                }
+            }
+
+            // File validation
+            if (fileInput.files.length > 0) {
+                const f = fileInput.files[0];
+                const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+                if (!allowed.includes(f.type)) {
+                    e.preventDefault();
+                    showAlert('Certificate must be PDF, JPG or PNG format');
+                    return;
+                }
+                const maxBytes = 5 * 1024 * 1024; // 5MB
+                if (f.size > maxBytes) {
+                    e.preventDefault();
+                    showAlert(`Certificate file too large (${(f.size / 1024 / 1024).toFixed(1)}MB / 5MB max)`);
+                    return;
+                }
+            }
+
+            // If validation passes, hide alert and submit
+            hideAlert();
+        });
+
+        // File upload drag and drop with preview
         fileUpload.addEventListener('dragover', (e) => {
             e.preventDefault();
             fileUpload.classList.add('drag-over');
@@ -485,13 +643,29 @@
             e.preventDefault();
             fileUpload.classList.remove('drag-over');
             fileInput.files = e.dataTransfer.files;
+            updateFilePreview();
         });
 
-        fileInput.addEventListener('change', (e) => {
-            if (fileInput.files.length > 0) {
-                fileUpload.querySelector('.file-upload-text').textContent = fileInput.files[0].name;
-            }
+        fileInput.addEventListener('change', () => {
+            updateFilePreview();
         });
+
+        function updateFilePreview() {
+            const preview = document.querySelector('.file-preview');
+            const previewName = document.querySelector('.file-preview-name');
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileUpload.classList.add('has-file');
+                document.querySelector('.file-upload-text').textContent = 'Certificate selected ✓';
+                previewName.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)}KB)`;
+                preview.classList.add('show');
+            } else {
+                fileUpload.classList.remove('has-file');
+                document.querySelector('.file-upload-text').textContent = 'Click to upload or drag and drop';
+                preview.classList.remove('show');
+            }
+        }
     </script>
 
 </body>

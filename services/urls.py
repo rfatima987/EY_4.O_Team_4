@@ -55,7 +55,10 @@ service_patterns = [
     path('provider/<int:provider_id>/', views.provider_detail, name='provider_detail'),
     path('booking/<int:provider_id>/', views.create_booking, name='booking_form'),
     path('booking/<int:booking_id>/update/<str:status>/', views.update_booking_status, name='update_booking_status'),
+    path('booking/<int:booking_id>/cancel/', views.cancel_booking, name='cancel_booking'),
     path('bookings/status/', views.bookings_status, name='bookings_status'),
+    path('api/bookings/', views.get_bookings_api, name='get_bookings_api'),
+    path('api/provider-bookings/', views.get_provider_bookings_api, name='get_provider_bookings_api'),
 ]
 
 # Legacy routes (backwards compatibility)

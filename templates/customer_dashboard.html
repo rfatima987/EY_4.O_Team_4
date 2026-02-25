@@ -318,6 +318,14 @@
                 <div class="stat-label">Pending</div>
                 <div class="stat-value">{{ pending_bookings }}</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value">{{ approved_bookings }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Success Rate</div>
+                <div class="stat-value">{{ success_rate }}%</div>
+            </div>
         </div>
 
         <!-- Quick Actions -->
@@ -378,6 +386,6 @@
         {% endif %}
     </div>
 
-    {% include 'footer.html' %}
+    {% include 'footer_new.html' %}
 </body>
 </html>
